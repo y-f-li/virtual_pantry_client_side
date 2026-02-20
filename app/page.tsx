@@ -57,7 +57,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Deploy now
+            Deploy later
           </Button>
           <Button
             type="default"

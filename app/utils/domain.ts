@@ -5,6 +5,9 @@ import { isProduction } from "@/utils/environment";
  * In production it retrieves the URL from NEXT_PUBLIC_PROD_API_URL (or falls back to a hardcoded url).
  * In development, it returns "http://localhost:8080".
  */
+
+// Feb.20 - added environment variable on vercel
+
 export function getApiDomain(): string {
   const prodUrl = process.env.NEXT_PUBLIC_PROD_API_URL ||
     "http://localhost:8080"; // TODO: update with your production URL as needed.
