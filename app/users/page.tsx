@@ -5,14 +5,11 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
-import useLocalStorage from "@/hooks/useLocalStorage";
 import { useLogout } from "@/hooks/useLogout";
 import { User } from "@/types/user";
 import { Button, Card, Table } from "antd";
-import type { TableProps } from "antd"; // antd component library allows imports of types
-// Optionally, you can import a CSS module or file for additional styling:
-// import "@/styles/views/Dashboard.scss";
-
+import type { TableProps } from "antd"; 
+import type { ApplicationError } from "@/types/error";
 // Columns for the antd table of User objects
 const columns: TableProps<User>["columns"] = [
   {
@@ -39,11 +36,6 @@ const Dashboard: React.FC = () => {
   // useLocalStorage hook example use
   // The hook returns an object with the value and two functions
   // Simply choose what you need from the hook:
-  const {
-    // value: token, // is commented out because we dont need to know the token value for logout
-    // set: setToken, // is commented out because we dont need to set or update the token value
-    clear: clearToken, // all we need in this scenario is a method to clear the token
-  } = useLocalStorage<string>("token", ""); // if you wanted to select a different token, i.e "lobby", useLocalStorage<string>("lobby", "");
 
   const logout = useLogout();
 
@@ -60,23 +52,20 @@ const Dashboard: React.FC = () => {
         const users: User[] = await apiService.get<User[]>("/users");
         setUsers(users);
         console.log("Fetched users:", users);
-      } catch (error: any) {
-        // If backend says "not logged in", redirect to login
-        if (error?.status === 401) {
+      } catch (error: unknown) {
+        const err = error as Partial<ApplicationError>;
+
+        if (err.status === 401) {
           router.replace("/login");
           return;
         }
 
-        if (error instanceof Error) {
-          alert(`Something went wrong while fetching users:\n${error.message}`);
-        } else {
-          console.error("An unknown error occurred while fetching users.");
-        }
+        alert(`Something went wrong while fetching users:\n${err.message ?? "Unknown error"}`);
       }
     };
 
     fetchUsers();
-  }, [apiService]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+  }, [apiService, router]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Alert, Button, Card, Form, Input, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
+import type { ApplicationError } from "@/types/error";
 
 const { Title, Text } = Typography;
 
@@ -50,8 +51,9 @@ export default function ChangePasswordPage() {
 
       message.success("Password updated. Please log in again.");
       router.push("/login");
-    } catch (e: any) {
-      const raw = e?.message ?? "Failed to update password";
+    } catch (e: unknown) {
+      const err = e as Partial<ApplicationError>;
+      const raw = err.message ?? "Failed to update password";
       const clean = extractReasonFromMessage(raw);
       setErr(clean);
       message.error(clean);

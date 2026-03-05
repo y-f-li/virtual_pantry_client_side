@@ -6,8 +6,7 @@ import { Alert, Card, Spin, Button } from "antd";
 import { useApi } from "@/hooks/useApi";
 import { useLogout } from "@/hooks/useLogout";
 import { User } from "@/types/user";
-// v3 logout import
-import useLocalStorage from "@/hooks/useLocalStorage";
+import type { ApplicationError } from "@/types/error";
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -23,8 +22,12 @@ export default function ProfilePage() {
   //v3.1 centralized logout using hook #
 
   //v6 change password
-  const selfId = localStorage.getItem("userId");
-  const isSelf = selfId && String(id) === selfId;
+  const [isSelf, setIsSelf] = useState(false);
+
+  useEffect(() => {
+    const selfId = localStorage.getItem("userId");
+    setIsSelf(!!selfId && String(id) === selfId);
+  }, [id]);
   //v6 change password #
 
   useEffect(() => {
@@ -40,9 +43,13 @@ export default function ProfilePage() {
 
         const u = await api.get<User>(`/users/${id}`);
         setUser(u);
-      } catch (e: any) {
-        if (e?.status === 401) router.replace("/login");
-        else setErr(e?.message ?? "Failed to load profile.");
+      } catch (e: unknown) {
+        const err = e as Partial<ApplicationError>;
+        if (err.status === 401) {
+          router.replace("/login");
+          return;
+        }
+        setErr(err.message ?? "Failed to load profile.");
       } finally {
         setLoading(false);
       }

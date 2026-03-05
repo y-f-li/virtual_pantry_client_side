@@ -6,6 +6,7 @@ import { Button, Card, Form, Input, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import type { User } from "@/types/user";
+import type { ApplicationError } from "@/types/error";
 
 const { Title, Text } = Typography;
 
@@ -38,16 +39,15 @@ export default function LoginPage() {
 
       // Go to profile (or /users if you prefer)
       router.push(`/users/${response.id}`);
-    } catch (e: any) {
-      const rawMsg = e?.message ?? "Login failed";
-      const cleanMsg = extractReasonFromMessage(rawMsg);
-      message.error(cleanMsg);
-
-      // Optional: clear password after failed login
-      form.setFieldsValue({ password: "" });
-    } finally {
-      setLoading(false);
-    }
+      } catch (e: unknown) {
+        const err = e as Partial<ApplicationError>;
+        const rawMsg = err.message ?? "Login failed";
+        const cleanMsg = extractReasonFromMessage(rawMsg);
+        message.error(cleanMsg);
+        form.setFieldsValue({ password: "" });
+      } finally {
+        setLoading(false);
+      }
   };
 
   return (

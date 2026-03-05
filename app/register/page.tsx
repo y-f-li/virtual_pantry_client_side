@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Form, Input, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
+import type { ApplicationError } from "@/types/error";
+import type { User } from "@/types/user";
 
 const { Title, Text } = Typography;
 
@@ -27,27 +29,22 @@ export default function RegisterPage() {
       setLoading(true);
       setServerError(null);
 
-      const created = await api.post<any>("/users", {
+      const created = await api.post<User>("/users", {
         username: values.username,
         password: values.password,
         bio: values.bio,
       });
-
       if (created?.token) localStorage.setItem("token", created.token);
       if (created?.id != null) localStorage.setItem("userId", String(created.id));
 
       router.push(`/users/${created.id}`);
-    } catch (e: any) {
-      const rawMsg = e?.message ?? "Registration failed";
+    } catch (e: unknown) {
+      const err = e as Partial<ApplicationError>;
+      const rawMsg = err.message ?? "Registration failed";
       const cleanMsg = extractReasonFromMessage(rawMsg);
-
       setServerError(cleanMsg);
       message.error(cleanMsg);
-
-      // Optional: clear password field after failure
       form.setFieldsValue({ password: "" });
-
-      // ✅ No redirect needed: user is already on /register
     } finally {
       setLoading(false);
     }
