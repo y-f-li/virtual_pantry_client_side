@@ -29,11 +29,16 @@ export default function useLocalStorage<T>(
 
   // On mount, try to read the stored value
   useEffect(() => {
-    if (typeof window === "undefined") return; // SSR safeguard
+    if (typeof window === "undefined") return;
     try {
       const stored = globalThis.localStorage.getItem(key);
-      if (stored) {
+      if (stored === null) return;
+
+      try {
         setValue(JSON.parse(stored) as T);
+      } catch {
+        // Not JSON (e.g., a raw token string). Use as-is.
+        setValue(stored as unknown as T);
       }
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error);
@@ -44,7 +49,11 @@ export default function useLocalStorage<T>(
   const set = (newVal: T) => {
     setValue(newVal);
     if (typeof window !== "undefined") {
-      globalThis.localStorage.setItem(key, JSON.stringify(newVal));
+      if (typeof newVal === "string") {
+        globalThis.localStorage.setItem(key, newVal); // store raw string token
+      } else {
+        globalThis.localStorage.setItem(key, JSON.stringify(newVal));
+      }
     }
   };
 

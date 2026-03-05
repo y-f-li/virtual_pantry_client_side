@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { useLogout } from "@/hooks/useLogout";
 import { User } from "@/types/user";
 import { Button, Card, Table } from "antd";
 import type { TableProps } from "antd"; // antd component library allows imports of types
@@ -20,9 +21,9 @@ const columns: TableProps<User>["columns"] = [
     key: "username",
   },
   {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
   },
   {
     title: "Id",
@@ -44,11 +45,12 @@ const Dashboard: React.FC = () => {
     clear: clearToken, // all we need in this scenario is a method to clear the token
   } = useLocalStorage<string>("token", ""); // if you wanted to select a different token, i.e "lobby", useLocalStorage<string>("lobby", "");
 
-  const handleLogout = (): void => {
-    // Clear token using the returned function 'clear' from the hook
-    clearToken();
-    router.push("/login");
-  };
+  const logout = useLogout();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) router.replace("/login");
+  }, [router]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -58,7 +60,13 @@ const Dashboard: React.FC = () => {
         const users: User[] = await apiService.get<User[]>("/users");
         setUsers(users);
         console.log("Fetched users:", users);
-      } catch (error) {
+      } catch (error: any) {
+        // If backend says "not logged in", redirect to login
+        if (error?.status === 401) {
+          router.replace("/login");
+          return;
+        }
+
         if (error instanceof Error) {
           alert(`Something went wrong while fetching users:\n${error.message}`);
         } else {
@@ -92,7 +100,7 @@ const Dashboard: React.FC = () => {
                 style: { cursor: "pointer" },
               })}
             />
-            <Button onClick={handleLogout} type="primary">
+            <Button onClick={logout} type="primary">
               Logout
             </Button>
           </>
