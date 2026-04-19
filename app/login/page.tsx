@@ -11,7 +11,6 @@ import type { ApplicationError } from "@/types/error";
 const { Title, Text } = Typography;
 
 function extractReasonFromMessage(msg: string): string {
-  // msg often looks like: "An error occurred ... (401: invalid credentials)"
   const match = msg.match(/\(\d+:\s*(.*)\)$/);
   return match?.[1] ?? msg;
 }
@@ -28,7 +27,6 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      // ✅ REAL login (registered users only)
       const response = await api.post<User>("/login", {
         username: values.username,
         password: values.password,
@@ -37,24 +35,23 @@ export default function LoginPage() {
       if (response?.token) setToken(response.token);
       if (response?.id != null) localStorage.setItem("userId", String(response.id));
 
-      // Go to profile (or /users if you prefer)
-      router.push(`/users/${response.id}`);
-      } catch (e: unknown) {
-        const err = e as Partial<ApplicationError>;
-        const rawMsg = err.message ?? "Login failed";
-        const cleanMsg = extractReasonFromMessage(rawMsg);
-        message.error(cleanMsg);
-        form.setFieldsValue({ password: "" });
-      } finally {
-        setLoading(false);
-      }
+      router.push("/pantry");
+    } catch (e: unknown) {
+      const err = e as Partial<ApplicationError>;
+      const rawMsg = err.message ?? "Login failed";
+      const cleanMsg = extractReasonFromMessage(rawMsg);
+      message.error(cleanMsg);
+      form.setFieldsValue({ password: "" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
       <Card>
         <Title level={3} style={{ marginTop: 0 }}>Login</Title>
-        <Text type="secondary">Use your registered username and password.</Text>
+        <Text type="secondary">Sign in to access the shared pantry prototype.</Text>
 
         <Form
           form={form}
@@ -84,6 +81,9 @@ export default function LoginPage() {
 
           <Button type="link" onClick={() => router.push("/register")} block>
             No account? Register
+          </Button>
+          <Button onClick={() => router.push("/")} block>
+            Back home
           </Button>
         </Form>
       </Card>

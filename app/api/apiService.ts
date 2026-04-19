@@ -17,7 +17,6 @@ export class ApiService {
       headers["Content-Type"] = "application/json";
     }
 
-    // localStorage exists only in the browser
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
       if (token) {
@@ -28,15 +27,6 @@ export class ApiService {
     return headers;
   }
 
-  /**
-   * Helper function to check the response, parse JSON,
-   * and throw an error if the response is not OK.
-   *
-   * @param res - The response from fetch.
-   * @param errorMessage - A descriptive error message for this call.
-   * @returns Parsed JSON data.
-   * @throws ApplicationError if res.ok is false.
-   */
   private async processResponse<T>(res: Response, errorMessage: string): Promise<T> {
     if (!res.ok) {
       let errorDetail = res.statusText;
@@ -47,7 +37,7 @@ export class ApiService {
         else if (errorInfo?.message) errorDetail = errorInfo.message;
         else errorDetail = JSON.stringify(errorInfo);
       } catch {
-        // keep statusText
+        // keep statusText fallback
       }
 
       const error: ApplicationError = new Error(
@@ -64,7 +54,6 @@ export class ApiService {
       throw error;
     }
 
-    // Handle "no content" responses cleanly
     if (res.status === 204 || res.status === 205) {
       return undefined as T;
     }
@@ -106,6 +95,16 @@ export class ApiService {
     return this.processResponse<T>(res, "An error occurred while updating the data.");
   }
 
+  public async patch<T>(endpoint: string, data?: unknown): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: this.buildHeaders({ hasBody: data !== undefined }),
+      body: data === undefined ? undefined : JSON.stringify(data),
+    });
+    return this.processResponse<T>(res, "An error occurred while patching the data.");
+  }
+
   public async delete<T>(endpoint: string): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
@@ -114,5 +113,4 @@ export class ApiService {
     });
     return this.processResponse<T>(res, "An error occurred while deleting the data.");
   }
-
 }

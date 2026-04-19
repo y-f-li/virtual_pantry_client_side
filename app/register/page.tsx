@@ -10,7 +10,6 @@ import type { User } from "@/types/user";
 const { Title, Text } = Typography;
 
 function extractReasonFromMessage(msg: string): string {
-  // msg often looks like: "An error occurred ... (409: username already exists)"
   const match = msg.match(/\(\d+:\s*(.*)\)$/);
   return match?.[1] ?? msg;
 }
@@ -37,7 +36,7 @@ export default function RegisterPage() {
       if (created?.token) localStorage.setItem("token", created.token);
       if (created?.id != null) localStorage.setItem("userId", String(created.id));
 
-      router.push(`/users/${created.id}`);
+      router.push("/pantry");
     } catch (e: unknown) {
       const err = e as Partial<ApplicationError>;
       const rawMsg = err.message ?? "Registration failed";
@@ -54,7 +53,7 @@ export default function RegisterPage() {
     <div style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
       <Card>
         <Title level={3} style={{ marginTop: 0 }}>Register</Title>
-        <Text type="secondary">Create an account, then you’ll be redirected to your profile.</Text>
+        <Text type="secondary">Create an account, then jump straight into the pantry.</Text>
 
         <Form
           form={form}
@@ -80,13 +79,7 @@ export default function RegisterPage() {
             <Input.Password />
           </Form.Item>
 
-          <Form.Item
-            label="Bio"
-            name="bio"
-            rules={[
-              { required: false, message: "Please enter a short bio (optional)" },
-            ]}
-          >
+          <Form.Item label="Bio" name="bio">
             <Input.TextArea rows={3} />
           </Form.Item>
 
@@ -96,6 +89,9 @@ export default function RegisterPage() {
 
           <Button type="link" onClick={() => router.push("/login")} block>
             Already registered? Go to login
+          </Button>
+          <Button onClick={() => router.push("/")} block>
+            Back home
           </Button>
         </Form>
       </Card>

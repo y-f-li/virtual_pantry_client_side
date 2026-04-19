@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Card, Spin, Button } from "antd";
+import { Alert, Button, Card, Space, Spin } from "antd";
 import { useApi } from "@/hooks/useApi";
 import { useLogout } from "@/hooks/useLogout";
 import { User } from "@/types/user";
@@ -16,19 +16,13 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  //v3.1 centralized logout using hook
   const logout = useLogout();
-  //v3.1 centralized logout using hook #
-
-  //v6 change password
   const [isSelf, setIsSelf] = useState(false);
 
   useEffect(() => {
     const selfId = localStorage.getItem("userId");
     setIsSelf(!!selfId && String(id) === selfId);
   }, [id]);
-  //v6 change password #
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,22 +35,24 @@ export default function ProfilePage() {
         setLoading(true);
         setErr(null);
 
-        const u = await api.get<User>(`/users/${id}`);
-        setUser(u);
+        const nextUser = await api.get<User>(`/users/${id}`);
+        setUser(nextUser);
       } catch (e: unknown) {
-        const err = e as Partial<ApplicationError>;
-        if (err.status === 401) {
+        const appError = e as Partial<ApplicationError>;
+        if (appError.status === 401) {
           router.replace("/login");
           return;
         }
-        setErr(err.message ?? "Failed to load profile.");
+        setErr(appError.message ?? "Failed to load profile.");
       } finally {
         setLoading(false);
       }
     })();
   }, [api, id, router]);
 
-  if (loading) return <div style={{ display: "grid", placeItems: "center", minHeight: 300 }}><Spin /></div>;
+  if (loading) {
+    return <div style={{ display: "grid", placeItems: "center", minHeight: 300 }}><Spin /></div>;
+  }
   if (err) return <Alert type="error" message={err} showIcon />;
   if (!user) return <Alert type="warning" message="User not found." showIcon />;
 
@@ -65,10 +61,10 @@ export default function ProfilePage() {
       <Card
         title={`Profile: ${user.username ?? ""}`}
         extra={
-          <div style={{ display: "flex", gap: 8 }}>
-            <Button onClick={() => router.push("/users")}>
-              Users overview
-            </Button>
+          <Space wrap>
+            <Button onClick={() => router.push("/pantry")}>Pantry</Button>
+            <Button onClick={() => router.push("/lookup")}>Product lookup</Button>
+            <Button onClick={() => router.push("/users")}>Users overview</Button>
             {isSelf && (
               <Button onClick={() => router.push(`/users/${id}/password`)}>
                 Change password
@@ -77,7 +73,7 @@ export default function ProfilePage() {
             <Button onClick={logout} type="primary">
               Logout
             </Button>
-          </div>
+          </Space>
         }
       >
         <p><b>ID:</b> {user.id}</p>

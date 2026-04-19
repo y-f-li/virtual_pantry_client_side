@@ -1,16 +1,14 @@
-// this code is part of S2 to display a list of all registered users
-// clicking on a user in this list will display /app/users/[id]/page.tsx
-"use client"; // For components that need React hooks and browser APIs, SSR (server side rendering) has to be disabled. Read more here: https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { useLogout } from "@/hooks/useLogout";
 import { User } from "@/types/user";
-import { Button, Card, Table } from "antd";
-import type { TableProps } from "antd"; 
+import { Button, Card, Space, Table } from "antd";
+import type { TableProps } from "antd";
 import type { ApplicationError } from "@/types/error";
-// Columns for the antd table of User objects
+
 const columns: TableProps<User>["columns"] = [
   {
     title: "Username",
@@ -33,10 +31,6 @@ const Dashboard: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [users, setUsers] = useState<User[] | null>(null);
-  // useLocalStorage hook example use
-  // The hook returns an object with the value and two functions
-  // Simply choose what you need from the hook:
-
   const logout = useLogout();
 
   useEffect(() => {
@@ -47,11 +41,8 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // apiService.get<User[]> returns the parsed JSON object directly,
-        // thus we can simply assign it to our users variable.
-        const users: User[] = await apiService.get<User[]>("/users");
-        setUsers(users);
-        console.log("Fetched users:", users);
+        const nextUsers: User[] = await apiService.get<User[]>("/users");
+        setUsers(nextUsers);
       } catch (error: unknown) {
         const err = error as Partial<ApplicationError>;
 
@@ -65,21 +56,24 @@ const Dashboard: React.FC = () => {
     };
 
     fetchUsers();
-  }, [apiService, router]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
-  // if the dependency array is left empty, the useEffect will trigger exactly once
-  // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
-  // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
+  }, [apiService, router]);
 
   return (
     <div className="card-container">
       <Card
-        title="Get all users from secure endpoint:"
+        title="Registered users"
         loading={!users}
         className="dashboard-container"
+        extra={
+          <Space wrap>
+            <Button onClick={() => router.push("/pantry")}>Pantry</Button>
+            <Button onClick={() => router.push("/lookup")}>Product lookup</Button>
+            <Button onClick={() => router.push("/")}>Home</Button>
+          </Space>
+        }
       >
         {users && (
           <>
-            {/* antd Table: pass the columns and data, plus a rowKey for stable row identity */}
             <Table<User>
               columns={columns}
               dataSource={users}
