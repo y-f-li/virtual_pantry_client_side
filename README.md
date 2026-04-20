@@ -1,6 +1,7 @@
 # Virtual Pantry Calorie Counter
 
 Check it out here: https://sopra-fs26-client-six.vercel.app/
+
 The server side of this project can be founud here: https://github.com/y-f-li/virtual_pantry_server_side
 
 ## Menu
