@@ -6,4 +6,5 @@ export interface Product {
   packageQuantity: number | null;
   packageUnit: string | null;
   kcalPerPackage: number | null;
+  imageUrl?: string | null;
 }

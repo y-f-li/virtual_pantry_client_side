@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { useLogout } from "@/hooks/useLogout";
 import { User } from "@/types/user";
-import { Button, Card, Space, Table } from "antd";
+import { Button, Card, Space, Table, Typography, message } from "antd";
 import type { TableProps } from "antd";
 import type { ApplicationError } from "@/types/error";
+import { getActiveToken, isGuestMode } from "@/utils/authStorage";
+
+const { Title, Text, Paragraph } = Typography;
 
 const columns: TableProps<User>["columns"] = [
   {
@@ -34,7 +37,13 @@ const Dashboard: React.FC = () => {
   const logout = useLogout();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    if (isGuestMode()) {
+      message.info("The users directory is only available for registered accounts.");
+      router.replace("/pantry");
+      return;
+    }
+
+    const token = getActiveToken();
     if (!token) router.replace("/login");
   }, [router]);
 
@@ -51,44 +60,57 @@ const Dashboard: React.FC = () => {
           return;
         }
 
-        alert(`Something went wrong while fetching users:\n${err.message ?? "Unknown error"}`);
+        message.error(err.message ?? "Unknown error while fetching users.");
       }
     };
 
-    fetchUsers();
+    if (!isGuestMode() && getActiveToken()) {
+      fetchUsers();
+    }
   }, [apiService, router]);
 
   return (
-    <div className="card-container">
-      <Card
-        title="Registered users"
-        loading={!users}
-        className="dashboard-container"
-        extra={
-          <Space wrap>
-            <Button onClick={() => router.push("/pantry")}>Pantry</Button>
-            <Button onClick={() => router.push("/lookup")}>Product lookup</Button>
-            <Button onClick={() => router.push("/")}>Home</Button>
-          </Space>
-        }
-      >
-        {users && (
-          <>
-            <Table<User>
-              columns={columns}
-              dataSource={users}
-              rowKey="id"
-              onRow={(row) => ({
-                onClick: () => router.push(`/users/${row.id}`),
-                style: { cursor: "pointer" },
-              })}
-            />
-            <Button onClick={logout} type="primary">
-              Logout
-            </Button>
-          </>
-        )}
-      </Card>
+    <div className="app-page">
+      <div className="app-shell medium">
+        <Card className="hero-card">
+          <div className="page-toolbar">
+            <div>
+              <Text className="page-kicker">Registered accounts</Text>
+              <Title level={2} className="page-heading">
+                Users
+              </Title>
+              <Paragraph className="page-subtitle">
+                Browse the registered users list and open a profile to inspect the stored account
+                details.
+              </Paragraph>
+            </div>
+            <div className="page-toolbar-actions">
+              <Button type="primary" onClick={() => router.push("/pantry")}>Pantry</Button>
+              <Button onClick={() => router.push("/lookup")}>Product lookup</Button>
+              <Button onClick={() => router.push("/")}>Home</Button>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="dashboard-container" loading={!users}>
+          {users && (
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <Table<User>
+                columns={columns}
+                dataSource={users}
+                rowKey="id"
+                onRow={(row) => ({
+                  onClick: () => router.push(`/users/${row.id}`),
+                  style: { cursor: "pointer" },
+                })}
+              />
+              <Button onClick={logout} type="primary">
+                Logout
+              </Button>
+            </Space>
+          )}
+        </Card>
+      </div>
     </div>
   );
 };

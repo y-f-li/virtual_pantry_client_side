@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Form, Input, Typography, message } from "antd";
+import { Button, Card, Form, Input, Space, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
-import useLocalStorage from "@/hooks/useLocalStorage";
+import type { GuestSession } from "@/types/guest";
 import type { User } from "@/types/user";
 import type { ApplicationError } from "@/types/error";
+import { clearGuestSession, storeGuestSession, storeUserSession } from "@/utils/authStorage";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 function extractReasonFromMessage(msg: string): string {
   const match = msg.match(/\(\d+:\s*(.*)\)$/);
@@ -19,9 +20,24 @@ export default function LoginPage() {
   const router = useRouter();
   const api = useApi();
   const [loading, setLoading] = useState(false);
-
-  const { set: setToken } = useLocalStorage<string>("token", "");
   const [form] = Form.useForm();
+
+
+  const enterGuestMode = async () => {
+    try {
+      setLoading(true);
+      clearGuestSession();
+      const session = await api.post<GuestSession>("/guest-session", {});
+      storeGuestSession(session.token, session.username);
+      message.success("Demo account ready. Nothing from this session will be kept.");
+      router.push("/pantry");
+    } catch {
+      message.error("Could not start the guest demo session.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const onFinish = async (values: { username: string; password: string }) => {
     try {
@@ -32,9 +48,8 @@ export default function LoginPage() {
         password: values.password,
       });
 
-      if (response?.token) setToken(response.token);
-      if (response?.id != null) localStorage.setItem("userId", String(response.id));
-
+      clearGuestSession();
+      if (response?.token) storeUserSession(response.token, response.id);
       router.push("/pantry");
     } catch (e: unknown) {
       const err = e as Partial<ApplicationError>;
@@ -48,45 +63,56 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
-      <Card>
-        <Title level={3} style={{ marginTop: 0 }}>Login</Title>
-        <Text type="secondary">Sign in to access the shared pantry prototype.</Text>
+    <div className="app-page">
+      <div className="app-shell narrow">
+        <Card className="shell-card">
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <div>
+              <Text className="page-kicker">Account access</Text>
+              <Title level={2} className="page-heading">
+                Login
+              </Title>
+              <Paragraph className="page-subtitle">
+                Sign in to use the persistent pantry experience. Guest demo mode is also available here if you just want a quick look around.
+              </Paragraph>
+            </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          style={{ marginTop: 16 }}
-        >
-          <Form.Item
-            name="username"
-            label="Username"
-            rules={[{ required: true, message: "Please enter your username" }]}
-          >
-            <Input placeholder="Enter username" />
-          </Form.Item>
+            <Form form={form} layout="vertical" onFinish={onFinish} className="form-stack">
+              <Form.Item
+                name="username"
+                label="Username"
+                rules={[{ required: true, message: "Please enter your username" }]}
+              >
+                <Input placeholder="Enter username" />
+              </Form.Item>
 
-          <Form.Item
-            name="password"
-            label="Password"
-            rules={[{ required: true, message: "Please enter your password" }]}
-          >
-            <Input.Password placeholder="Enter password" />
-          </Form.Item>
+              <Form.Item
+                name="password"
+                label="Password"
+                rules={[{ required: true, message: "Please enter your password" }]}
+              >
+                <Input.Password placeholder="Enter password" />
+              </Form.Item>
 
-          <Button type="primary" htmlType="submit" loading={loading} block>
-            Login
-          </Button>
+              <Button type="primary" htmlType="submit" loading={loading} block>
+                Login
+              </Button>
 
-          <Button type="link" onClick={() => router.push("/register")} block>
-            No account? Register
-          </Button>
-          <Button onClick={() => router.push("/")} block>
-            Back home
-          </Button>
-        </Form>
-      </Card>
+              <Button type="default" onClick={() => router.push("/register")} block>
+                No account? Register
+              </Button>
+              <Button type="primary" onClick={enterGuestMode} loading={loading} block>
+                Continue in demo mode
+              </Button>
+              <Button onClick={() => router.push("/")} block>
+                Back home
+              </Button>
+            </Form>
+
+            <Text type="secondary">Use the same deployed backend endpoints, just with a lighter UI.</Text>
+          </Space>
+        </Card>
+      </div>
     </div>
   );
 }

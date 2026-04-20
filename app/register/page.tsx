@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Form, Input, Typography, message } from "antd";
+import { Button, Card, Form, Input, Space, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
 import type { ApplicationError } from "@/types/error";
 import type { User } from "@/types/user";
+import { clearGuestSession, storeUserSession } from "@/utils/authStorage";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 function extractReasonFromMessage(msg: string): string {
   const match = msg.match(/\(\d+:\s*(.*)\)$/);
@@ -20,10 +21,9 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-
   const [form] = Form.useForm();
 
-  const onFinish = async (values: { username: string; password: string; bio: string }) => {
+  const onFinish = async (values: { username: string; password: string }) => {
     try {
       setLoading(true);
       setServerError(null);
@@ -31,11 +31,11 @@ export default function RegisterPage() {
       const created = await api.post<User>("/users", {
         username: values.username,
         password: values.password,
-        bio: values.bio,
+        bio: "",
       });
-      if (created?.token) localStorage.setItem("token", created.token);
-      if (created?.id != null) localStorage.setItem("userId", String(created.id));
 
+      clearGuestSession();
+      if (created?.token) storeUserSession(created.token, created.id);
       router.push("/pantry");
     } catch (e: unknown) {
       const err = e as Partial<ApplicationError>;
@@ -50,51 +50,56 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
-      <Card>
-        <Title level={3} style={{ marginTop: 0 }}>Register</Title>
-        <Text type="secondary">Create an account, then jump straight into the pantry.</Text>
+    <div className="app-page">
+      <div className="app-shell narrow">
+        <Card className="shell-card">
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <div>
+              <Text className="page-kicker">Create a persistent account</Text>
+              <Title level={2} className="page-heading">
+                Register
+              </Title>
+              <Paragraph className="page-subtitle">
+                Set up an account and head straight into the pantry. Guest sessions are temporary,
+                but registered accounts keep your pantry state around.
+              </Paragraph>
+            </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          style={{ marginTop: 16 }}
-        >
-          <Form.Item
-            label="Username"
-            name="username"
-            validateStatus={serverError ? "error" : ""}
-            help={serverError ?? ""}
-            rules={[{ required: true, message: "Please enter a username" }]}
-          >
-            <Input />
-          </Form.Item>
+            <Form form={form} layout="vertical" onFinish={onFinish} className="form-stack">
+              <Form.Item
+                label="Username"
+                name="username"
+                validateStatus={serverError ? "error" : ""}
+                help={serverError ?? ""}
+                rules={[{ required: true, message: "Please enter a username" }]}
+              >
+                <Input placeholder="Choose a username" />
+              </Form.Item>
 
-          <Form.Item
-            label="Password"
-            name="password"
-            rules={[{ required: true, message: "Please enter a password" }]}
-          >
-            <Input.Password />
-          </Form.Item>
+              <Form.Item
+                label="Password"
+                name="password"
+                rules={[{ required: true, message: "Please enter a password" }]}
+              >
+                <Input.Password placeholder="Choose a password" />
+              </Form.Item>
 
-          <Form.Item label="Bio" name="bio">
-            <Input.TextArea rows={3} />
-          </Form.Item>
+              <Button type="primary" htmlType="submit" loading={loading} block>
+                Create account
+              </Button>
 
-          <Button type="primary" htmlType="submit" loading={loading} block>
-            Create account
-          </Button>
+              <Button type="default" onClick={() => router.push("/login")} block>
+                Already registered? Go to login
+              </Button>
+              <Button onClick={() => router.push("/")} block>
+                Back home
+              </Button>
+            </Form>
 
-          <Button type="link" onClick={() => router.push("/login")} block>
-            Already registered? Go to login
-          </Button>
-          <Button onClick={() => router.push("/")} block>
-            Back home
-          </Button>
-        </Form>
-      </Card>
+            <Text type="secondary">Everything stays on the same light visual language as the pantry pages.</Text>
+          </Space>
+        </Card>
+      </div>
     </div>
   );
 }

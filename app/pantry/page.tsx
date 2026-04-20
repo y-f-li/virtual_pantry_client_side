@@ -2,88 +2,94 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useApi } from "@/hooks/useApi";
-import type { PantryBudgetPutDTO, PantryItem, PantryStats } from "@/types/pantry";
 import { Button, Card, InputNumber, Space, Table, Typography, message } from "antd";
 import type { TableProps } from "antd";
+import { useApi } from "@/hooks/useApi";
 import type { ApplicationError } from "@/types/error";
+import type { PantryBudgetPutDTO, PantryItem, PantryStats } from "@/types/pantry";
+import { getActiveToken, isGuestMode } from "@/utils/authStorage";
+import { useLogout } from "@/hooks/useLogout";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
+
+function getStartOfCalendarWeek(): string {
+  const currentDate = new Date();
+  const localDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+  const weekday = localDate.getDay();
+  const daysSinceMonday = (weekday + 6) % 7;
+  localDate.setDate(localDate.getDate() - daysSinceMonday);
+  return localDate.toISOString().slice(0, 10);
+}
 
 export default function PantryPage() {
   const router = useRouter();
   const api = useApi();
+  const logout = useLogout();
 
+  const [guest, setGuest] = useState(false);
   const [items, setItems] = useState<PantryItem[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [fromDate, setFromDate] = useState<string>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    return d.toISOString().slice(0, 10);
-  });
   const [stats, setStats] = useState<PantryStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fromDate, setFromDate] = useState(getStartOfCalendarWeek());
+  const [fromDateTouched, setFromDateTouched] = useState(false);
   const [idealDraft, setIdealDraft] = useState<number | null>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) router.replace("/login");
-  }, [router]);
+  const totalKcal = useMemo(
+    () =>
+      (items ?? []).reduce(
+        (sum, item) => sum + ((item.kcalPerPackage ?? 0) * (item.count ?? 0)),
+        0,
+      ),
+    [items],
+  );
 
   const fetchPantry = async () => {
-    setLoading(true);
     try {
-      const data = await api.get<PantryItem[]>("/pantry");
-      setItems(data);
+      setLoading(true);
+      const pantryItems = await api.get<PantryItem[]>("/pantry");
+      setItems(pantryItems);
     } catch (error) {
       const appError = error as Partial<ApplicationError>;
-      if (appError.status === 401) {
-        router.replace("/login");
-        return;
-      }
-      message.error(appError.message ?? "Failed to load pantry.");
-      setItems([]);
+      message.error(appError.message ?? "Failed to load pantry items.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async (dateStr: string) => {
+  const fetchStats = async (startDate: string) => {
     try {
-      const data = await api.get<PantryStats>(`/pantry/stats?from=${encodeURIComponent(dateStr)}`);
-      setStats(data);
-      if (idealDraft == null && data.idealDailyKcal != null) {
-        setIdealDraft(data.idealDailyKcal);
-      }
+      const pantryStats = await api.get<PantryStats>(`/pantry/stats?from=${encodeURIComponent(startDate)}`);
+      setStats(pantryStats);
+      setIdealDraft(pantryStats.idealDailyKcal ?? null);
     } catch (error) {
       const appError = error as Partial<ApplicationError>;
-      if (appError.status === 401) {
-        router.replace("/login");
-        return;
-      }
       message.error(appError.message ?? "Failed to load pantry statistics.");
-      setStats(null);
     }
   };
 
   useEffect(() => {
+    setGuest(isGuestMode());
+    const token = getActiveToken();
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+
     fetchPantry();
     fetchStats(fromDate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
 
   useEffect(() => {
+    const token = getActiveToken();
+    if (!token) {
+      return;
+    }
     fetchStats(fromDate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDate]);
 
-  const totalKcal = useMemo(() => {
-    if (!items) return 0;
-    return items.reduce((sum, item) => sum + (item.kcalPerPackage ?? 0) * (item.count ?? 0), 0);
-  }, [items]);
-
-  const consumeOne = async (id: number) => {
+  const consumeOne = async (itemId: number) => {
     try {
-      await api.patch(`/pantry/${id}/consume`);
+      await api.patch(`/pantry/${itemId}/consume`, {});
       await fetchPantry();
       await fetchStats(fromDate);
     } catch (error) {
@@ -92,9 +98,10 @@ export default function PantryPage() {
     }
   };
 
-  const removeItem = async (id: number) => {
+  const removeItem = async (itemId: number) => {
     try {
-      await api.delete(`/pantry/${id}`);
+      await api.delete(`/pantry/${itemId}`);
+      message.success("Pantry item removed.");
       await fetchPantry();
       await fetchStats(fromDate);
     } catch (error) {
@@ -126,13 +133,16 @@ export default function PantryPage() {
       {
         title: "kcal / pkg",
         key: "kcalPerPackage",
-        render: (_, record) => (record.kcalPerPackage == null ? "—" : Math.round(record.kcalPerPackage)),
+        render: (_, record) =>
+          record.kcalPerPackage == null ? "—" : Math.round(record.kcalPerPackage),
       },
       {
         title: "Total kcal",
         key: "totalKcal",
         render: (_, record) =>
-          record.kcalPerPackage == null ? "—" : Math.round((record.kcalPerPackage ?? 0) * (record.count ?? 0)),
+          record.kcalPerPackage == null
+            ? "—"
+            : Math.round((record.kcalPerPackage ?? 0) * (record.count ?? 0)),
       },
       {
         title: "Added",
@@ -158,80 +168,134 @@ export default function PantryPage() {
   );
 
   return (
-    <div className="card-container">
-      <Card style={{ width: 1000 }} loading={!items}>
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          <Space style={{ width: "100%", justifyContent: "space-between" }}>
-            <Title level={3} style={{ margin: 0 }}>
-              Virtual Pantry
-            </Title>
-            <Space wrap>
-              <Button type="primary" onClick={() => router.push("/lookup")}>
-                Add items
-              </Button>
-              <Button onClick={fetchPantry} loading={loading}>
-                Refresh
-              </Button>
-              <Button onClick={() => router.push("/users")}>Users</Button>
-              <Button onClick={() => router.push("/")}>Home</Button>
-            </Space>
-          </Space>
+    <div className="app-page">
+      <div className="app-shell">
+        <Card className="hero-card" loading={!items}>
+          <div className="page-toolbar">
+            <div>
+              <Title level={2} className="page-heading">
+                Virtual Pantry
+              </Title>
+              <Paragraph className="page-subtitle">
+                View your pantry stock, estimate calorie, and track consumption in one place
+              </Paragraph>
+              <div className="guidance-callout" style={{ marginTop: 16 }}>
+                <Paragraph style={{ marginBottom: 0 }}>
+                  <strong>Add items</strong> to see change in Estimated Calories owned. <strong>Consume 1</strong>{" "}
+                  to see change in average Calorie consumption per day.
+                </Paragraph>
+              </div>
+              {guest ? (
+                <div className="soft-note" style={{ marginTop: 14 }}>
+                  Guest demo mode is active. This pantry resets when the browser session ends.
+                </div>
+              ) : null}
+            </div>
+            <div className="page-toolbar-actions">
+              {!guest ? (
+                <>
+                  <Button onClick={fetchPantry} loading={loading}>
+                    Refresh
+                  </Button>
+                  <Button onClick={() => router.push("/users")}>Users</Button>
+                  <Button onClick={() => router.push("/")}>Home</Button>
+                </>
+              ) : null}
+              {guest ? <Button danger onClick={logout}>Exit demo</Button> : null}
+            </div>
+          </div>
+        </Card>
 
-          <Text>
-            Total calories owned (estimate): <strong>{Math.round(totalKcal)}</strong> kcal
-          </Text>
+        <div className="metric-grid">
+          <div className="metric-card">
+            <span className="metric-label">Estimated calories in your pantry now</span>
+            <span className="metric-value">{Math.round(totalKcal)} kcal</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-label">Average consumed / day</span>
+            <span className="metric-value">
+              {stats ? `${Math.round(stats.avgDailyCaloriesConsumed)} kcal` : "—"}
+            </span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-label">Ideal calorie budget per day</span>
+            <span className="metric-value">
+              {stats?.idealDailyKcal == null ? "Unset" : `${Math.round(stats.idealDailyKcal)} kcal`}
+            </span>
+          </div>
+        </div>
 
-          <Card size="small">
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              <Space style={{ justifyContent: "space-between", width: "100%" }}>
-                <Text>Average calories consumed since:</Text>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(event) => setFromDate(event.target.value)}
+        <Card className="section-card" title="Ideal calorie budget">
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <div className="page-toolbar">
+              <Text>
+                Average calories consumed since:{" "}
+                {!fromDateTouched ? "(beginning from the calendar week by default)" : ""}
+              </Text>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(event) => {
+                  setFromDateTouched(true);
+                  setFromDate(event.target.value);
+                }}
+              />
+            </div>
+
+            <Text>
+              Avg/day: <strong>{stats ? Math.round(stats.avgDailyCaloriesConsumed) : "—"}</strong> kcal
+              {stats && stats.unknownKcalEvents > 0 ? (
+                <Text type="secondary"> (plus {stats.unknownKcalEvents} consumed items with unknown kcal)</Text>
+              ) : null}
+            </Text>
+
+            <div className="page-toolbar">
+              <Text>Ideal kcal/day:</Text>
+              <Space>
+                <InputNumber
+                  min={1}
+                  value={idealDraft}
+                  onChange={(value) => setIdealDraft(value == null ? null : Number(value))}
                 />
+                <Button type="primary" onClick={saveIdealBudget}>Save</Button>
               </Space>
+            </div>
 
-              <Text>
-                Avg/day: <strong>{stats ? Math.round(stats.avgDailyCaloriesConsumed) : "—"}</strong> kcal
-                {stats && stats.unknownKcalEvents > 0 ? (
-                  <Text type="secondary"> (plus {stats.unknownKcalEvents} consumed items with unknown kcal)</Text>
-                ) : null}
-              </Text>
+            <Text>
+              {stats?.idealDailyKcal == null || stats?.avgMinusIdeal == null ? (
+                <Text type="secondary">Set an ideal budget to compare.</Text>
+              ) : (
+                <>
+                  Difference vs ideal: <strong>{Math.round(Math.abs(stats.avgMinusIdeal))}</strong> kcal/day
+                  {stats.avgMinusIdeal > 0 ? " above" : " below"} ideal
+                </>
+              )}
+            </Text>
+          </Space>
+        </Card>
 
-              <Space style={{ justifyContent: "space-between", width: "100%" }}>
-                <Text>Ideal household kcal/day:</Text>
-                <Space>
-                  <InputNumber
-                    min={1}
-                    value={idealDraft}
-                    onChange={(value) => setIdealDraft(value == null ? null : Number(value))}
-                  />
-                  <Button onClick={saveIdealBudget}>Save</Button>
-                </Space>
-              </Space>
+        <Card className="section-card">
+          <div className="panel-row pantry-cta-row">
+            <Button type="primary" onClick={() => router.push("/lookup")}>
+              Add items
+            </Button>
+            <div className="panel-copy">
+              <Paragraph style={{ marginBottom: 0 }}>
+                Add items to Pantry using barcode look up.
+              </Paragraph>
+            </div>
+          </div>
+        </Card>
 
-              <Text>
-                {stats?.idealDailyKcal == null || stats?.avgMinusIdeal == null ? (
-                  <Text type="secondary">Set an ideal budget to compare.</Text>
-                ) : (
-                  <>
-                    Difference vs ideal: <strong>{Math.round(Math.abs(stats.avgMinusIdeal))}</strong> kcal/day
-                    {stats.avgMinusIdeal > 0 ? " above" : " below"} ideal
-                  </>
-                )}
-              </Text>
-            </Space>
-          </Card>
-
+        <Card className="section-card" title="Pantry items">
           <Table<PantryItem>
             columns={columns}
             dataSource={items ?? []}
             rowKey="id"
             pagination={{ pageSize: 10 }}
           />
-        </Space>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

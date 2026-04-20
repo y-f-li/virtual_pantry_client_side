@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Button, Card, Form, Input, Typography, message } from "antd";
+import { Alert, Button, Card, Form, Input, Space, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
 import type { ApplicationError } from "@/types/error";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 function extractReasonFromMessage(msg: string): string {
   const match = msg.match(/\(\d+:\s*(.*)\)$/);
@@ -22,7 +22,6 @@ export default function ChangePasswordPage() {
   const [err, setErr] = useState<string | null>(null);
   const [form] = Form.useForm();
 
-  // Guard: must be logged in AND must be self
   useEffect(() => {
     const token = localStorage.getItem("token");
     const selfId = localStorage.getItem("userId");
@@ -45,7 +44,6 @@ export default function ChangePasswordPage() {
         password: values.newPassword,
       });
 
-      // Backend invalidated token; clear client too
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
 
@@ -65,46 +63,59 @@ export default function ChangePasswordPage() {
 
   if (err && err === "You can only change your own password.") {
     return (
-      <div style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
-        <Alert type="error" message={err} showIcon />
+      <div className="app-page">
+        <div className="app-shell narrow">
+          <Alert type="error" message={err} showIcon />
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
-      <Card>
-        <Title level={3} style={{ marginTop: 0 }}>Change password</Title>
-        <Text type="secondary">You’ll be logged out after saving.</Text>
+    <div className="app-page">
+      <div className="app-shell narrow">
+        <Card className="shell-card">
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <div>
+              <Text className="page-kicker">Account security</Text>
+              <Title level={2} className="page-heading">
+                Change password
+              </Title>
+              <Paragraph className="page-subtitle">
+                After saving, the current session is cleared and you will need to log in again.
+              </Paragraph>
+            </div>
 
-        {err && <Alert style={{ marginTop: 12 }} type="error" message={err} showIcon />}
+            {err && <Alert type="error" message={err} showIcon />}
 
-        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 16 }}>
-          <Form.Item
-            label="Current password"
-            name="oldPassword"
-            rules={[{ required: true, message: "Please enter your current password" }]}
-          >
-            <Input.Password />
-          </Form.Item>
+            <Form form={form} layout="vertical" onFinish={onFinish} className="form-stack">
+              <Form.Item
+                label="Current password"
+                name="oldPassword"
+                rules={[{ required: true, message: "Please enter your current password" }]}
+              >
+                <Input.Password />
+              </Form.Item>
 
-          <Form.Item
-            label="New password"
-            name="newPassword"
-            rules={[{ required: true, message: "Please enter a new password" }]}
-          >
-            <Input.Password />
-          </Form.Item>
+              <Form.Item
+                label="New password"
+                name="newPassword"
+                rules={[{ required: true, message: "Please enter a new password" }]}
+              >
+                <Input.Password />
+              </Form.Item>
 
-          <Button type="primary" htmlType="submit" loading={loading} block>
-            Save new password
-          </Button>
+              <Button type="primary" htmlType="submit" loading={loading} block>
+                Save new password
+              </Button>
 
-          <Button onClick={() => router.push(`/users/${id}`)} block style={{ marginTop: 8 }}>
-            Cancel
-          </Button>
-        </Form>
-      </Card>
+              <Button onClick={() => router.push(`/users/${id}`)} block>
+                Cancel
+              </Button>
+            </Form>
+          </Space>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -2,19 +2,29 @@
 
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
+import { clearGuestSession, clearUserSession, getActiveToken, isGuestMode } from "@/utils/authStorage";
 
 export function useLogout() {
   const api = useApi();
   const router = useRouter();
 
   return async () => {
+    const token = getActiveToken();
+    const guest = isGuestMode();
+
     try {
-      await api.post("/logout", {});
+      if (token) {
+        if (guest) {
+          await api.delete("/guest-session");
+        } else {
+          await api.post("/logout", {});
+        }
+      }
     } catch {
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("userId");
-      router.push("/login");
+      clearGuestSession();
+      clearUserSession();
+      router.push("/");
     }
   };
 }

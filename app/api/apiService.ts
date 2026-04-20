@@ -1,5 +1,6 @@
 import { getApiDomain } from "@/utils/domain";
 import { ApplicationError } from "@/types/error";
+import { getActiveToken } from "@/utils/authStorage";
 
 export class ApiService {
   private baseURL: string;
@@ -18,7 +19,7 @@ export class ApiService {
     }
 
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
+      const token = getActiveToken();
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }

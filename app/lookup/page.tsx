@@ -1,56 +1,136 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import type { Product } from "@/types/product";
-import { Button, Card, Form, Input, Space, Table, Typography, message } from "antd";
-import type { TableProps } from "antd";
+import { Button, Card, Form, Input, InputNumber, Space, Typography, message } from "antd";
 import type { ApplicationError } from "@/types/error";
+import { getActiveToken, isGuestMode } from "@/utils/authStorage";
+import { useLogout } from "@/hooks/useLogout";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
+
+const DEMO_BARCODE_EXAMPLES = [
+  { barcode: "5000168198514", name: "Sablés chocolat – McVitie's" },
+  { barcode: "7613404535318", name: "Lait UHT" },
+  { barcode: "7613404249895", name: "Vollkorn Complet Integrale" },
+] as const;
+
+interface OpenFoodFactsImageResponse {
+  product?: {
+    image_front_url?: string;
+    image_url?: string;
+    selected_images?: unknown;
+  };
+}
+
+function isLikelyImageUrl(value: string): boolean {
+  return /^https?:\/\/[^\s]+\.(jpg|jpeg|png|webp)(\?.*)?$/i.test(value);
+}
+
+function findImageUrl(value: unknown): string | null {
+  if (typeof value === "string") {
+    return isLikelyImageUrl(value) ? value : null;
+  }
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const nestedMatch = findImageUrl(entry);
+      if (nestedMatch) {
+        return nestedMatch;
+      }
+    }
+    return null;
+  }
+
+  if (value && typeof value === "object") {
+    for (const nestedValue of Object.values(value)) {
+      const nestedMatch = findImageUrl(nestedValue);
+      if (nestedMatch) {
+        return nestedMatch;
+      }
+    }
+  }
+
+  return null;
+}
+
+async function fetchProductImageUrl(barcode: string): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://world.openfoodfacts.net/api/v2/product/${encodeURIComponent(barcode)}?fields=image_front_url,image_url,selected_images`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as OpenFoodFactsImageResponse;
+    return (
+      data.product?.image_front_url ??
+      findImageUrl(data.product?.selected_images) ??
+      data.product?.image_url ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
 
 export default function LookupPage() {
   const router = useRouter();
   const api = useApi();
+  const logout = useLogout();
+  const [guest, setGuest] = useState(false);
 
   const [barcode, setBarcode] = useState("");
-  const [query, setQuery] = useState("");
   const [barcodeResult, setBarcodeResult] = useState<Product | null>(null);
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    setGuest(isGuestMode());
+    const token = getActiveToken();
     if (!token) router.replace("/login");
   }, [router]);
 
-  const addToPantry = async (product: Product) => {
+  const addToPantry = async (product: Product, count: number) => {
     try {
+      setAdding(true);
       await api.post("/pantry", {
         barcode: product.barcode,
         name: product.name,
         kcalPerPackage: product.kcalPerPackage,
-        count: 1,
+        count,
       });
-      message.success(`${product.name ?? "Product"} added to pantry.`);
+      message.success(`${count} ${count === 1 ? "item" : "items"} added to pantry.`);
       router.push("/pantry");
     } catch (error) {
       const appError = error as Partial<ApplicationError>;
       message.error(appError.message ?? "Failed to add product to pantry.");
+    } finally {
+      setAdding(false);
     }
   };
 
-  const onLookupBarcode = async () => {
-    if (!barcode.trim()) {
-      message.warning("Please enter a barcode.");
-      return;
-    }
-
+  const lookupBarcodeValue = async (barcodeValue: string) => {
     try {
       setLoading(true);
-      const result = await api.get<Product>(`/products/lookup?barcode=${encodeURIComponent(barcode.trim())}`);
-      setBarcodeResult(result);
+      setBarcodeResult(null);
+      setQuantity(1);
+      const result = await api.get<Product>(
+        `/products/lookup?barcode=${encodeURIComponent(barcodeValue)}`,
+      );
+      const imageUrl = result.barcode ? await fetchProductImageUrl(result.barcode) : null;
+      setBarcodeResult({ ...result, imageUrl });
     } catch (error) {
       const appError = error as Partial<ApplicationError>;
       setBarcodeResult(null);
@@ -60,103 +140,109 @@ export default function LookupPage() {
     }
   };
 
-  const onSearch = async () => {
-    if (!query.trim()) {
-      message.warning("Please enter a search term.");
+  const onLookupBarcode = async () => {
+    const trimmedBarcode = barcode.trim();
+    if (!trimmedBarcode) {
+      message.warning("Please enter a barcode.");
       return;
     }
 
-    try {
-      setLoading(true);
-      const results = await api.get<Product[]>(`/products/search?q=${encodeURIComponent(query.trim())}`);
-      setSearchResults(results);
-    } catch (error) {
-      const appError = error as Partial<ApplicationError>;
-      setSearchResults([]);
-      message.error(appError.message ?? "Search failed.");
-    } finally {
-      setLoading(false);
-    }
+    await lookupBarcodeValue(trimmedBarcode);
   };
 
-  const columns: TableProps<Product>["columns"] = useMemo(
-    () => [
-      {
-        title: "Name",
-        dataIndex: "name",
-        key: "name",
-      },
-      {
-        title: "Brand",
-        dataIndex: "brand",
-        key: "brand",
-      },
-      {
-        title: "Barcode",
-        dataIndex: "barcode",
-        key: "barcode",
-      },
-      {
-        title: "kcal / package",
-        key: "kcalPerPackage",
-        render: (_, record) =>
-          record.kcalPerPackage == null ? "—" : Math.round(record.kcalPerPackage),
-      },
-      {
-        title: "Action",
-        key: "action",
-        render: (_, record) => (
-          <Button
-            type="primary"
-            onClick={() => addToPantry(record)}
-            disabled={!record.barcode && !record.name}
-          >
-            Add to pantry
-          </Button>
-        ),
-      },
-    ],
-    [],
-  );
+  const onUseDemoBarcode = async (barcodeValue: string, itemName: string) => {
+    setBarcode(barcodeValue);
+    message.success(`Loaded example barcode for ${itemName}.`);
+    await lookupBarcodeValue(barcodeValue);
+  };
 
   return (
-    <div className="card-container">
-      <Card style={{ width: 1000 }}>
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          <Space style={{ width: "100%", justifyContent: "space-between" }}>
+    <div className="app-page">
+      <div className="app-shell">
+        <Card className="hero-card">
+          <div className="page-toolbar">
             <div>
-              <Title level={3} style={{ margin: 0 }}>
+              <Title level={2} className="page-heading">
                 Product Lookup
               </Title>
-              <Text type="secondary">
-                Search OpenFoodFacts and send selected products into the shared pantry.
-              </Text>
+              <Paragraph className="page-subtitle">via OpenFoodFacts API</Paragraph>
+              <Paragraph style={{ marginTop: 12, marginBottom: 0, color: "var(--text-soft)" }}>
+                Look up an item, then add to pantry.
+              </Paragraph>
+              {guest ? (
+                <div className="soft-note" style={{ marginTop: 14 }}>
+                  You are currently in guest demo mode.
+                </div>
+              ) : null}
             </div>
-            <Space wrap>
-              <Button onClick={() => router.push("/pantry")}>Pantry</Button>
-              <Button onClick={() => router.push("/users")}>Users</Button>
+            <div className="page-toolbar-actions">
+              <Button type="primary" onClick={() => router.push("/pantry")}>Pantry</Button>
+              {!guest ? <Button onClick={() => router.push("/users")}>Users</Button> : null}
               <Button onClick={() => router.push("/")}>Home</Button>
-            </Space>
-          </Space>
+              {guest ? <Button danger onClick={logout}>Exit demo</Button> : null}
+            </div>
+          </div>
+        </Card>
 
-          <Card size="small" title="Barcode lookup">
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              <Form layout="vertical">
-                <Form.Item label="Barcode">
-                  <Input
-                    value={barcode}
-                    onChange={(e) => setBarcode(e.target.value)}
-                    placeholder="e.g. 3017620422003"
-                  />
-                </Form.Item>
-                <Button type="primary" loading={loading} onClick={onLookupBarcode}>
-                  Lookup
-                </Button>
-              </Form>
+        <Card className="section-card" title="Barcode lookup">
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Form layout="vertical">
+              <Form.Item label="Barcode">
+                <Input
+                  value={barcode}
+                  onChange={(e) => setBarcode(e.target.value)}
+                  placeholder="e.g. 3017620422003"
+                />
+              </Form.Item>
+              <Button type="primary" loading={loading} onClick={onLookupBarcode}>
+                Lookup
+              </Button>
+            </Form>
 
-              {barcodeResult && (
-                <Card type="inner" title={barcodeResult.name ?? "(unknown)"}>
-                  <Space direction="vertical">
+            {guest ? (
+              <div className="demo-helper-panel">
+                <div>
+                  <Text strong className="demo-helper-title">
+                    Example barcodes for demo
+                  </Text>
+                  <Paragraph className="demo-helper-copy">
+                    Tap any example below to load a barcode into the search and try the pantry flow right away.
+                  </Paragraph>
+                </div>
+                <Space direction="vertical" size="small" style={{ width: "100%" }}>
+                  {DEMO_BARCODE_EXAMPLES.map((example) => (
+                    <Button
+                      key={example.barcode}
+                      className="demo-example-button"
+                      onClick={() => onUseDemoBarcode(example.barcode, example.name)}
+                    >
+                      <span className="demo-example-barcode">{example.barcode}</span>
+                      <span className="demo-example-name">{example.name}</span>
+                    </Button>
+                  ))}
+                </Space>
+              </div>
+            ) : null}
+
+            {barcodeResult ? (
+              <Card className="lookup-result-card">
+                <div className="lookup-result-layout">
+                  <div className="lookup-result-image-wrap">
+                    {barcodeResult.imageUrl ? (
+                      <img
+                        src={barcodeResult.imageUrl}
+                        alt={barcodeResult.name ?? "Product image"}
+                        className="lookup-result-image"
+                      />
+                    ) : (
+                      <div className="lookup-result-image-fallback">No image</div>
+                    )}
+                  </div>
+
+                  <div className="lookup-result-copy">
+                    <Text strong className="lookup-result-title">
+                      {barcodeResult.name ?? "(unknown)"}
+                    </Text>
                     <Text>Brand: {barcodeResult.brand ?? "—"}</Text>
                     <Text>Barcode: {barcodeResult.barcode ?? "—"}</Text>
                     <Text>
@@ -165,40 +251,31 @@ export default function LookupPage() {
                         ? "—"
                         : Math.round(barcodeResult.kcalPerPackage)}
                     </Text>
-                    <Button type="primary" onClick={() => addToPantry(barcodeResult)}>
-                      Add to pantry
-                    </Button>
-                  </Space>
-                </Card>
-              )}
-            </Space>
-          </Card>
 
-          <Card size="small" title="Keyword search">
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              <Form layout="vertical">
-                <Form.Item label="Search term">
-                  <Input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="e.g. milk"
-                  />
-                </Form.Item>
-                <Button type="primary" loading={loading} onClick={onSearch}>
-                  Search
-                </Button>
-              </Form>
-
-              <Table<Product>
-                columns={columns}
-                dataSource={searchResults}
-                rowKey={(record, index) => record.barcode ?? `${record.name ?? "product"}-${index}`}
-                pagination={{ pageSize: 10 }}
-              />
-            </Space>
-          </Card>
-        </Space>
-      </Card>
+                    <div className="lookup-result-actions">
+                      <Space wrap>
+                        <Text>Quantity to add:</Text>
+                        <InputNumber
+                          min={1}
+                          value={quantity}
+                          onChange={(value) => setQuantity(Number(value ?? 1))}
+                        />
+                        <Button
+                          type="primary"
+                          onClick={() => addToPantry(barcodeResult, quantity)}
+                          loading={adding}
+                        >
+                          Add to pantry
+                        </Button>
+                      </Space>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ) : null}
+          </Space>
+        </Card>
+      </div>
     </div>
   );
 }
