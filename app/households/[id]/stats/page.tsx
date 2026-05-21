@@ -1441,8 +1441,13 @@ export default function StatsPage() {
             selectedConsumerId !== null && selectedConsumerId !== numericUserId
               ? selectedConsumerId
               : undefined;
-          // For package items without calorie data, open the calorie-unknown flow
-          if (amountUnit === "package" && !isKnownCalories(item.kcalPerPackage)) {
+          // For items without calorie data for the stored unit, open the calorie-unknown flow
+          const kcalMissing =
+            (amountUnit === "package" && !isKnownCalories(item.kcalPerPackage)) ||
+            (amountUnit === "g" && !isKnownCalories(item.kcalPer100g)) ||
+            (amountUnit === "ml" && !isKnownCalories(item.kcalPer100ml)) ||
+            (amountUnit === "serving" && !isKnownCalories(item.kcalPerServing));
+          if (kcalMissing) {
             const suggestedCalories = estimateSuggestedCalories(item);
             setPortionConsumeState(null);
             setUnknownConsumeState({

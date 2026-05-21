@@ -47,6 +47,7 @@ export interface PantryItemCreateRequest {
   kcalPerPackage?: number | null;
   kcalPer100g?: number | null;
   kcalPer100ml?: number | null;
+  kcalPerServing?: number | null;
   manualEntry?: boolean;
   expirationDate?: string | null;
   micronutrients?: Partial<Record<ManualMicronutrientKey, PantryItemMicronutrientCreateRequest>>;

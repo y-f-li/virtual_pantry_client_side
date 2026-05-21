@@ -13,6 +13,7 @@ import {
   getDefaultAmount,
   getKcalPer100g,
   getKcalPer100ml,
+  getKcalPerServing,
   estimateKcalPerPackage,
   getProductCalorieBasisDisplay,
   PACKAGE_QUANTITY_UNAVAILABLE_NOTE,
@@ -275,6 +276,9 @@ export default function ProductResultCard({
   const VALID_UNITS: AmountUnit[] = availableUnits;
   const [selectedUnit, setSelectedUnit] = useState<AmountUnit>(() => availableUnits[0]);
   const [amount, setAmount] = useState<number>(() => getDefaultAmount(product, availableUnits[0]));
+  const [manualKcalPerPackage, setManualKcalPerPackage] = useState<string>(
+    () => estimateKcalPerPackage(product)?.toString() ?? "",
+  );
   const [expirationDate, setExpirationDate] = useState<Dayjs | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -283,13 +287,16 @@ export default function ProductResultCard({
   const handleUnitChange = useCallback((unit: AmountUnit) => {
     setSelectedUnit(unit);
     setAmount(getDefaultAmount(product, unit));
+    if (unit === "package") {
+      setManualKcalPerPackage(estimateKcalPerPackage(product)?.toString() ?? "");
+    }
   }, [product]);
 
   // Issue #114 — real-time calorie estimate shown as user adjusts amount and unit
   const liveKcal = useMemo(() => {
     if (selectedUnit === "package") {
-      const perPackage = estimateKcalPerPackage(product);
-      return perPackage !== null ? Number((perPackage * amount).toFixed(1)) : null;
+      const perPackage = parseFloat(manualKcalPerPackage);
+      return Number.isFinite(perPackage) && perPackage > 0 ? Number((perPackage * amount).toFixed(1)) : null;
     }
     if (selectedUnit === "g") {
       const per100g = getKcalPer100g(product);
@@ -299,8 +306,12 @@ export default function ProductResultCard({
       const per100ml = getKcalPer100ml(product);
       return per100ml !== null ? Number(((per100ml * amount) / 100).toFixed(1)) : null;
     }
+    if (selectedUnit === "serving") {
+      const perServing = getKcalPerServing(product);
+      return perServing !== null ? Number((perServing * amount).toFixed(1)) : null;
+    }
     return null;
-  }, [product, selectedUnit, amount]);
+  }, [product, selectedUnit, amount, manualKcalPerPackage]);
 
   const handleAddToPantry = async (): Promise<void> => {
     if (!effectivePantryContext) {
@@ -328,8 +339,12 @@ export default function ProductResultCard({
     setIsSubmitting(true);
 
     try {
+      const basePayload = buildPantryItemPayload(product, amount, selectedUnit);
       const payload = {
-        ...buildPantryItemPayload(product, amount, selectedUnit),
+        ...basePayload,
+        kcalPerPackage: selectedUnit === "package"
+          ? (parseFloat(manualKcalPerPackage) || null)
+          : basePayload.kcalPerPackage,
         expirationDate: expirationDate ? expirationDate.format("YYYY-MM-DD") : null,
       };
       await api.post<PantryItem>(
@@ -479,6 +494,22 @@ export default function ProductResultCard({
                   className={styles.quantityInput}
                 />
               </label>
+
+              {selectedUnit === "package" && (
+                <label className={styles.quantityField}>
+                  <span className={styles.quantityLabel}>Kcal per package (optional)</span>
+                  <input
+                    aria-label="Kcal per package"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={manualKcalPerPackage}
+                    onChange={(e) => setManualKcalPerPackage(e.target.value)}
+                    placeholder="Unknown"
+                    className={styles.quantityInput}
+                  />
+                </label>
+              )}
 
               {liveKcal !== null && (
                 <div className={styles.metaCard}>

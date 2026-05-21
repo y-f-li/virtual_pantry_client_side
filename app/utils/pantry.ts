@@ -331,6 +331,13 @@ export function getKcalPer100ml(product: Product): number | null {
     ?? parseNumber((product.nutriments ?? {})["energy-kcal_100ml"]);
 }
 
+export function getKcalPerServing(product: Product): number | null {
+  const direct = positiveDisplayNumber(product.caloriesPerServing);
+  if (direct !== null) return direct;
+  const fromNutriments = parseNumber((product.nutriments ?? {})["energy-kcal_serving"]);
+  return fromNutriments !== null && fromNutriments > 0 ? Number(fromNutriments.toFixed(2)) : null;
+}
+
 // Issue #114 — build payload with amount, amountUnit, and the relevant kcal field for the chosen unit
 export function buildPantryItemPayload(
   product: Product,
@@ -342,8 +349,9 @@ export function buildPantryItemPayload(
     name: (product.name ?? "").trim(),
     amount,
     amountUnit: unit,
-    kcalPerPackage: unit === "package" ? estimateKcalPerPackage(product) : null,
-    kcalPer100g: unit === "g" ? getKcalPer100g(product) : null,
-    kcalPer100ml: unit === "ml" ? getKcalPer100ml(product) : null,
+    kcalPerPackage: estimateKcalPerPackage(product),
+    kcalPer100g: getKcalPer100g(product),
+    kcalPer100ml: getKcalPer100ml(product),
+    kcalPerServing: getKcalPerServing(product),
   };
 }
