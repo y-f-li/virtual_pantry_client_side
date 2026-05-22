@@ -292,7 +292,7 @@ const DashboardPage: React.FC = () => {
                 <div className={dashboardStyles.kpiLabel}>Distinct products</div>
                 <div className={dashboardStyles.kpiValue}>{distinctProductCount}</div>
                 <div className={dashboardStyles.kpiSub}>
-                  product type{distinctProductCount === 1 ? "" : "s"} in pantry
+                  unique product{distinctProductCount === 1 ? "" : "s"} currently stocked
                 </div>
               </Card>
               <Card className={dashboardStyles.kpiCardOutline}>
