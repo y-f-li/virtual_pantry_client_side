@@ -50,6 +50,19 @@ This part covers the personal nutrition and health goal side of the application.
 
 Household-level calorie statistics, including consumption trends and budget tracking, are shown in [`app/households/[id]/stats/page.tsx`](app/households/[id]/stats/page.tsx) using Recharts visualizations.
 
+### 5. Recipe recommendations
+
+This part helps users turn pantry inventory into meal ideas. [`app/recipes/page.tsx`](app/recipes/page.tsx) requests recipe recommendations for the selected household and displays each recipe with a match score, nutrition summary, source label, available ingredients, missing ingredients, and a detail modal. Recipes returned by the backend can come from the curated local recipe catalog (`Local recipe`) or from the dynamic pantry generator (`Pantry generated`).
+
+The frontend does not match recipe ingredients by itself. It displays the backend result, including whether each ingredient was matched to a pantry item. On the backend, each recipe ingredient has one or more keywords, and the backend compares those keywords with normalized pantry item names. For example, an ingredient such as `Eggs` can match pantry items whose names contain `egg` or `eggs`, and `Avocado` can match a pantry item whose name contains `avocado`.
+
+For local testing, the following barcodes are useful because they can be added to the pantry and then matched by recipe recommendations:
+
+- `20408466` — egg
+- `7610632951347` — avocado
+
+After adding these products to a household pantry, opening the recipe page should show recipes that recognize the matched ingredients, such as egg-based breakfast recipes or avocado toast/bowl recipes. This also makes it easier to verify the `Local recipe` / `Pantry generated` source labels and the missing-ingredient display.
+
 ### How the components work together
 
 The household pantry page is the central point of the frontend. Products found through name search, barcode scan, or receipt review all feed into the same pantry add flow. Once items are in the pantry and users consume them, the real-time WebSocket hook keeps every household member's pantry view current. The consumption data drives both the household statistics page and the personal nutrition tracking pages, connecting the shared pantry to individual health goals.
@@ -174,8 +187,8 @@ personal health goals and inspect household nutrition statistics based on stored
 pantry and consumption data. The recipe page recommends meals from the current
 pantry, highlights which ingredients are already available, lists missing
 ingredients, and explains how well each recipe fits the household's health goals.
-Recipe recommendations also indicate their source, such as the external recipe
-API or the local fallback catalog.
+Recipe recommendations also indicate their source, such as the curated local
+catalog or the dynamic pantry generator.
 
 The following screenshots illustrate the main user flows:
 
