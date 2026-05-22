@@ -26,7 +26,14 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const FOREST = "#1b5e20";
-const MAX_SAFE_RATE = 1.0;
+
+function ageMaxRate(age: number | undefined): number {
+  if (age == null) return 0.75;
+  if (age < 13) return 0.25;
+  if (age < 18) return 0.5;
+  if (age < 65) return 0.75;
+  return 0.5;
+}
 
 interface FormValues {
   age: number;
@@ -56,6 +63,7 @@ export default function HealthGoalPage() {
   const watchedWeight = Form.useWatch("weight", form) as number | undefined;
   const watchedTargetWeight = Form.useWatch("targetWeight", form) as number | undefined;
   const watchedWeeks = Form.useWatch("weeksToGoal", form) as number | undefined;
+  const watchedAge = Form.useWatch("age", form) as number | undefined;
 
   const computedRate =
     goalType === "LOSE_WEIGHT" &&
@@ -159,7 +167,7 @@ export default function HealthGoalPage() {
               label="Age"
               rules={[{ required: true, message: "Required" }]}
             >
-              <InputNumber min={10} max={120} style={{ width: "100%" }} suffix="yrs" />
+              <InputNumber max={120} style={{ width: "100%" }} suffix="yrs" />
             </Form.Item>
             <Form.Item
               name="sex"
@@ -246,12 +254,20 @@ export default function HealthGoalPage() {
                 </Form.Item>
               </div>
 
-              {computedRate !== null && computedRate > MAX_SAFE_RATE && watchedWeight != null && watchedTargetWeight != null && (
+              {watchedAge != null && watchedAge < 13 && (
                 <Alert
                   type="warning"
                   showIcon
                   style={{ marginBottom: 16 }}
-                  description={`We recommend losing no more than 1 kg per week for sustainable results. Try at least ${Math.ceil(watchedWeight - watchedTargetWeight)} weeks to stay on track.`}
+                  description="Children should only follow a weight-loss plan under medical supervision. Please consult a doctor before proceeding."
+                />
+              )}
+              {computedRate !== null && computedRate > ageMaxRate(watchedAge) && watchedWeight != null && watchedTargetWeight != null && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  style={{ marginBottom: 16 }}
+                  description={`For your age group, we recommend losing no more than ${ageMaxRate(watchedAge)} kg per week. Your target will be automatically adjusted to a safe range. Try at least ${Math.ceil((watchedWeight - watchedTargetWeight) / ageMaxRate(watchedAge))} weeks to stay on track.`}
                 />
               )}
             </>
