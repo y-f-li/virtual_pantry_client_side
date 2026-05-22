@@ -1137,8 +1137,10 @@ export default function StatsPage() {
                     </div>
 
                     {stats?.comparisonToBudget ? (
-                      <div>
-                        <Text style={{ fontSize: 12, color: MUTED }}>Household period average vs daily target:</Text>
+                      <>
+                        <Divider style={{ margin: "4px 0" }} />
+                        <div>
+                        <Text style={{ fontSize: 12, color: MUTED }}>🏠 Household period average vs daily target:</Text>
                         <div style={{ marginTop: 6 }}>
                           <Tag color={comparisonTagColor(stats.comparisonToBudget.status)}>
                             {stats.comparisonToBudget.status.split("_").join(" ")}
@@ -1148,7 +1150,8 @@ export default function StatsPage() {
                             {stats.dailyCalorieTarget?.toFixed(0) ?? "—"} kcal/day
                           </Text>
                         </div>
-                      </div>
+                        </div>
+                      </>
                     ) : null}
                   </Space>
                 </Card>
