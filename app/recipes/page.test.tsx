@@ -102,6 +102,7 @@ const recipeFixture = {
   title: "Light Tomato Pasta",
   summary: "A simple lower-calorie pasta plate.",
   imageEmoji: "pasta",
+  source: "LOCAL_CATALOG",
   servings: 2,
   readyToCook: true,
   matchScore: 92,
@@ -159,6 +160,7 @@ describe("Recipes page", () => {
 
     expect(await screen.findByText("Recipes for Team Kitchen")).toBeInTheDocument();
     expect(screen.getByText("Light Tomato Pasta")).toBeInTheDocument();
+    expect(screen.getByText("Local recipe")).toBeInTheDocument();
     expect(screen.getByText("Fits the household's lighter calorie goal")).toBeInTheDocument();
     expect(screen.getByText("1 of 1 ingredients matched from pantry.")).toBeInTheDocument();
   });
