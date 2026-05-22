@@ -156,6 +156,81 @@ function getRequirementTarget(requirement: MicronutrientRequirementGetDTO): {
   return { value: null, referenceType: null };
 }
 
+function getUpperLimitValue(requirement: MicronutrientRequirementGetDTO): number | null {
+  const upperLimitValue = toNumber(requirement.upperLimitValue);
+  if (upperLimitValue !== null && upperLimitValue > 0) {
+    return upperLimitValue;
+  }
+
+  const ulValue = toNumber(requirement.ulValue);
+  if (ulValue !== null && ulValue > 0) {
+    return ulValue;
+  }
+
+  return null;
+}
+
+type ProgressTone = "active" | "success" | "exception" | "normal";
+
+function calculateProgressState(
+  consumedValue: number,
+  targetValue: number | null,
+  upperLimitValue: number | null,
+): {
+  targetPercentage: number | null;
+  cappedPercentage: number;
+  status: ProgressTone;
+  stateLabel: string;
+} {
+  if (!targetValue) {
+    return {
+      targetPercentage: null,
+      cappedPercentage: 0,
+      status: "normal",
+      stateLabel: "No RDA or AI target",
+    };
+  }
+
+  const targetPercentage = (consumedValue / targetValue) * 100;
+
+  if (upperLimitValue !== null && upperLimitValue > targetValue) {
+    if (consumedValue <= targetValue) {
+      const barPercentage = (consumedValue / targetValue) * 75;
+      return {
+        targetPercentage,
+        cappedPercentage: Math.min(Math.max(barPercentage, 0), 75),
+        status: "active",
+        stateLabel: "Below sufficient intake",
+      };
+    }
+
+    if (consumedValue <= upperLimitValue) {
+      const barPercentage = 75 + ((consumedValue - targetValue) / (upperLimitValue - targetValue)) * 25;
+      return {
+        targetPercentage,
+        cappedPercentage: Math.min(Math.max(barPercentage, 75), 100),
+        status: "success",
+        stateLabel: "Sufficient intake reached",
+      };
+    }
+
+    return {
+      targetPercentage,
+      cappedPercentage: 100,
+      status: "exception",
+      stateLabel: "Above upper limit",
+    };
+  }
+
+  const barPercentage = (consumedValue / targetValue) * 75;
+  return {
+    targetPercentage,
+    cappedPercentage: Math.min(Math.max(barPercentage, 0), 100),
+    status: consumedValue >= targetValue ? "success" : "active",
+    stateLabel: consumedValue >= targetValue ? "Sufficient intake reached" : "Below sufficient intake",
+  };
+}
+
 const NutritionReferencePage: React.FC = () => {
   const { isAuthenticated } = useAuthGuard();
   const params = useParams<{ id: string }>();
@@ -253,14 +328,20 @@ const NutritionReferencePage: React.FC = () => {
         const intakeField = NUTRIENT_INTAKE_FIELD_BY_DISPLAY_NAME[requirement.displayName];
         const consumedValue = intakeField && dailyIntake ? toNumber(dailyIntake[intakeField]) ?? 0 : 0;
         const target = getRequirementTarget(requirement);
-        const percentage = target.value ? (consumedValue / target.value) * 100 : null;
+        const rawUpperLimitValue = getUpperLimitValue(requirement);
+        const upperLimitValue =
+          target.value !== null && rawUpperLimitValue !== null && rawUpperLimitValue > target.value
+            ? rawUpperLimitValue
+            : null;
+        const progressState = calculateProgressState(consumedValue, target.value, upperLimitValue);
 
         return {
           requirement,
           consumedValue,
           targetValue: target.value,
           referenceType: target.referenceType,
-          percentage,
+          upperLimitValue,
+          progressState,
         };
       }),
     [dailyIntake, requirements],
@@ -287,7 +368,7 @@ const NutritionReferencePage: React.FC = () => {
             Daily Micronutrient Progress
           </Title>
           <Paragraph className={statsStyles.pageSubtitle}>
-            Today&apos;s consumed micronutrients compared with the user&apos;s RDA or AI reference target.
+            Today&apos;s consumed micronutrients compared with the user&apos;s RDA/AI sufficiency target and upper limit where available.
           </Paragraph>
         </div>
 
@@ -309,11 +390,22 @@ const NutritionReferencePage: React.FC = () => {
                 </Text>
               )}
 
+              {progressRows.length > 0 && (
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  Progress bars: sufficient intake is marked at 75%; when a valid upper limit exists, it is marked at 100%.
+                </Text>
+              )}
+
               {progressRows.length > 0 ? (
                 <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                  {progressRows.map(({ requirement, consumedValue, targetValue, referenceType, percentage }) => {
-                    const displayPercentage = percentage ?? 0;
-                    const cappedPercentage = Math.min(Math.max(displayPercentage, 0), 100);
+                  {progressRows.map(({
+                    requirement,
+                    consumedValue,
+                    targetValue,
+                    referenceType,
+                    upperLimitValue,
+                    progressState,
+                  }) => {
                     const unit = requirement.unit ?? "µg";
 
                     return (
@@ -330,22 +422,78 @@ const NutritionReferencePage: React.FC = () => {
                           >
                             <Text strong>{requirement.displayName}</Text>
                             <Text type="secondary">
-                              {percentage === null ? "No target" : `${displayPercentage.toFixed(1)}%`}
+                              {progressState.targetPercentage === null
+                                ? "No target"
+                                : `${progressState.targetPercentage.toFixed(1)}% of ${referenceType ?? "target"}`}
                             </Text>
                           </Space>
 
-                          <Progress
-                            percent={cappedPercentage}
-                            showInfo={false}
-                            status={displayPercentage > 100 ? "exception" : "active"}
-                          />
+                          <div style={{ position: "relative", paddingBottom: 24 }}>
+                            <Progress
+                              percent={progressState.cappedPercentage}
+                              showInfo={false}
+                              status={progressState.status}
+                            />
 
-                          <Text type="secondary">
-                            {formatNullableValue(consumedValue)} {unit} consumed
-                            {targetValue
-                              ? ` / ${formatNullableValue(targetValue)} ${unit} ${referenceType ?? "target"}`
-                              : " / no RDA or AI target available"}
-                          </Text>
+                            {targetValue && (
+                              <>
+                                <span
+                                  aria-hidden="true"
+                                  style={{
+                                    position: "absolute",
+                                    left: "75%",
+                                    top: 3,
+                                    width: 2,
+                                    height: 22,
+                                    background: "rgba(15, 23, 42, 0.55)",
+                                    transform: "translateX(-1px)",
+                                  }}
+                                />
+                                <Text
+                                  type="secondary"
+                                  style={{
+                                    position: "absolute",
+                                    left: "75%",
+                                    bottom: 0,
+                                    transform: "translateX(-50%)",
+                                    fontSize: 12,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  Sufficient
+                                </Text>
+                                {upperLimitValue && (
+                                  <Text
+                                    type="secondary"
+                                    style={{
+                                      position: "absolute",
+                                      right: 0,
+                                      bottom: 0,
+                                      fontSize: 12,
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    Upper limit
+                                  </Text>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          <Space direction="vertical" size={0}>
+                            <Text type="secondary">
+                              {formatNullableValue(consumedValue)} {unit} consumed
+                              {targetValue
+                                ? ` / ${formatNullableValue(targetValue)} ${unit} ${referenceType ?? "target"} sufficiency target`
+                                : " / no RDA or AI target available"}
+                            </Text>
+                            <Text type="secondary">
+                              Upper limit: {upperLimitValue ? `${formatNullableValue(upperLimitValue)} ${unit}` : "not specified"}
+                            </Text>
+                            <Text type={progressState.status === "exception" ? "danger" : "secondary"}>
+                              {progressState.stateLabel}
+                            </Text>
+                          </Space>
                         </Space>
                       </Card>
                     );

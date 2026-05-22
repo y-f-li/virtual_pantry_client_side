@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Alert, Button, Card, DatePicker, Radio, Space, Spin, Typography, App } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
@@ -143,6 +143,7 @@ function deriveLifeStageGroup(
 const UserPersonalProfileDetailPage: React.FC = () => {
   const { isAuthenticated } = useAuthGuard();
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const api = useApi();
   const { message } = App.useApp();
 
@@ -306,6 +307,9 @@ const UserPersonalProfileDetailPage: React.FC = () => {
           <Paragraph className={statsStyles.pageSubtitle}>
             Testing page for setting and updating the user&apos;s personal details.
           </Paragraph>
+          <Button onClick={() => router.push(`/users/${userId}/details/nutrition-reference`)}>
+            View nutrition reference
+          </Button>
         </div>
 
         <Card
