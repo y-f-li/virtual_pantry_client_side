@@ -109,6 +109,25 @@ describe("ManualAddPantryItemPage", () => {
     expect(screen.getByLabelText("Amount in ml")).toBeInTheDocument();
   });
 
+  it("prefills fields from food recognition query params and keeps them editable", async () => {
+    window.history.pushState(
+      {},
+      "",
+      "/pantry/add/manual?householdId=7&householdName=Test%20Home&name=Rice&unit=g&amount=150&calories=130",
+    );
+
+    render(<ManualAddPantryItemPage />);
+    await waitFor(() => expect(screen.getByLabelText("Unit")).toBeInTheDocument());
+
+    expect(screen.getByLabelText("e.g. Whole Milk")).toHaveValue("Rice");
+    expect(screen.getByLabelText("Unit")).toHaveValue("g");
+    expect(screen.getByLabelText("Amount in g")).toHaveValue(150);
+    expect(screen.getByLabelText("Calories per 100g (kcal)")).toHaveValue(130);
+
+    fireEvent.change(screen.getByLabelText("e.g. Whole Milk"), { target: { value: "Brown rice" } });
+    expect(screen.getByLabelText("e.g. Whole Milk")).toHaveValue("Brown rice");
+  });
+
   it("shows warning and does not submit when name is empty", async () => {
     render(<ManualAddPantryItemPage />);
     await waitFor(() => expect(screen.getByRole("button", { name: "Add to pantry" })).toBeInTheDocument());

@@ -95,7 +95,8 @@ describe("Open Food Facts page", () => {
 
     render(<OpenFoodFactsPage />);
 
-    expect(screen.getByRole("button", { name: "Upload product image" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Scan package barcode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Recognize food from photo" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload receipt" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add manually" })).toBeInTheDocument();
 

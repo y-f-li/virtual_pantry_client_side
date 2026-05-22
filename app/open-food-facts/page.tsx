@@ -726,7 +726,14 @@ function OpenFoodFactsPortalContent() {
               icon={<CameraOutlined />}
               onClick={() => router.push(buildPantryActionUrl("/pantry/add/scan"))}
             >
-              Upload product image
+              Scan package barcode
+            </Button>
+            <Button
+              icon={<CameraOutlined />}
+              onClick={() => router.push(buildPantryActionUrl("/pantry/add/recognize"))}
+              disabled={!pantryTarget}
+            >
+              Recognize food from photo
             </Button>
             <Button
               icon={<FileImageOutlined />}

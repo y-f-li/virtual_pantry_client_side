@@ -286,6 +286,10 @@ function formatConsumptionUnitLabel(unit: ConsumptionUnit): string {
   return unit;
 }
 
+function isConsumptionUnit(unit: unknown): unit is ConsumptionUnit {
+  return unit === "package" || unit === "serving" || unit === "g" || unit === "ml";
+}
+
 function getAvailableConsumptionUnits(item: PantryItem): ConsumptionUnit[] {
   const fromBackend = item.availableConsumptionUnits?.filter((unit): unit is ConsumptionUnit =>
     unit === "package" || unit === "serving" || unit === "g" || unit === "ml",
@@ -710,20 +714,36 @@ export default function StatsPage() {
         formData,
       );
 
+      const availableUnits = getAvailableConsumptionUnits(item);
+      const suggestedUnit = isConsumptionUnit(estimate.unit) && availableUnits.includes(estimate.unit)
+        ? estimate.unit
+        : portionConsumeState.amountUnit;
       const suggestedAmount =
         typeof estimate.suggestedMinAmount === "number" && Number.isFinite(estimate.suggestedMinAmount)
           ? estimate.suggestedMinAmount
           : null;
+      const maxAmount = getMaxConsumptionAmount(item, suggestedUnit);
+      const estimatedRange =
+        estimate.estimatedRange ??
+        (
+          typeof estimate.suggestedMinAmount === "number" &&
+          typeof estimate.suggestedMaxAmount === "number" &&
+          Number.isFinite(estimate.suggestedMinAmount) &&
+          Number.isFinite(estimate.suggestedMaxAmount)
+            ? `${formatAmountDisplay(estimate.suggestedMinAmount)}–${formatAmountDisplay(estimate.suggestedMaxAmount)} ${suggestedUnit}`
+            : null
+        );
 
       setPortionConsumeState((current) =>
         current
           ? {
               ...current,
+              amountUnit: suggestedUnit,
               amount:
                 suggestedAmount !== null
-                  ? Math.min(Math.max(suggestedAmount, 0.01), getMaxConsumptionAmount(current.item, current.amountUnit) ?? suggestedAmount)
+                  ? Math.min(Math.max(suggestedAmount, 0.01), maxAmount ?? suggestedAmount)
                   : current.amount,
-              estimatedRange: estimate.estimatedRange ?? null,
+              estimatedRange,
               estimateMessage:
                 estimate.message ??
                 "Suggested portion loaded. Please confirm or edit the amount before saving.",
@@ -1185,7 +1205,17 @@ export default function StatsPage() {
                             )
                           }
                         >
-                          Scan product image
+                          Scan package barcode
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() =>
+                            router.push(
+                              `/pantry/add/recognize?householdId=${householdId}&householdName=${encodeURIComponent(householdName)}`,
+                            )
+                          }
+                        >
+                          Recognize food from photo
                         </Button>
                         <Button
                           size="small"
