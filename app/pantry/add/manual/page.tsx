@@ -9,7 +9,7 @@ import { usePantryWebSocket } from "@/hooks/usePantryWebSocket";
 import { VirtualPantryAppShell } from "@/components/VirtualPantryAppShell";
 import { isStaleHouseholdError, getStaleHouseholdMessage } from "@/utils/householdStale";
 import type { HouseholdWithRole } from "@/types/household";
-import type { ConsumptionUnit, ManualMicronutrientKey, MicronutrientUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
+import type { ConsumptionUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
 import { App, Button, Card, DatePicker, Input, Space, Typography } from "antd";
 import type { Dayjs } from "dayjs";
 import { ArrowLeftOutlined } from "@ant-design/icons";
@@ -21,79 +21,6 @@ type PantryTarget = {
   householdName: string;
 };
 
-type ManualMicronutrientDescriptor = {
-  key: ManualMicronutrientKey;
-  label: string;
-  defaultUnit: MicronutrientUnit;
-};
-
-type ManualMicronutrientFieldState = {
-  value: number | "";
-  unit: MicronutrientUnit;
-};
-
-type ManualMicronutrientFormState = Record<ManualMicronutrientKey, ManualMicronutrientFieldState>;
-
-const MANUAL_MICRONUTRIENTS: ManualMicronutrientDescriptor[] = [
-  { key: "biotin", label: "Biotin", defaultUnit: "µg" },
-  { key: "calcium", label: "Calcium", defaultUnit: "mg" },
-  { key: "chloride", label: "Chloride", defaultUnit: "mg" },
-  { key: "choline", label: "Choline", defaultUnit: "mg" },
-  { key: "chromium", label: "Chromium", defaultUnit: "µg" },
-  { key: "copper", label: "Copper", defaultUnit: "mg" },
-  { key: "fluoride", label: "Fluoride", defaultUnit: "mg" },
-  { key: "folate", label: "Folate", defaultUnit: "µg" },
-  { key: "iodine", label: "Iodine", defaultUnit: "µg" },
-  { key: "iron", label: "Iron", defaultUnit: "mg" },
-  { key: "magnesium", label: "Magnesium", defaultUnit: "mg" },
-  { key: "manganese", label: "Manganese", defaultUnit: "mg" },
-  { key: "molybdenum", label: "Molybdenum", defaultUnit: "µg" },
-  { key: "niacin", label: "Niacin", defaultUnit: "mg" },
-  { key: "pantothenicAcid", label: "Pantothenic acid", defaultUnit: "mg" },
-  { key: "phosphorus", label: "Phosphorus", defaultUnit: "mg" },
-  { key: "potassium", label: "Potassium", defaultUnit: "mg" },
-  { key: "riboflavin", label: "Riboflavin", defaultUnit: "mg" },
-  { key: "selenium", label: "Selenium", defaultUnit: "µg" },
-  { key: "sodium", label: "Sodium", defaultUnit: "mg" },
-  { key: "thiamin", label: "Thiamin", defaultUnit: "mg" },
-  { key: "vitaminA", label: "Vitamin A", defaultUnit: "µg" },
-  { key: "vitaminB12", label: "Vitamin B12", defaultUnit: "µg" },
-  { key: "vitaminB6", label: "Vitamin B6", defaultUnit: "mg" },
-  { key: "vitaminC", label: "Vitamin C", defaultUnit: "mg" },
-  { key: "vitaminD", label: "Vitamin D", defaultUnit: "µg" },
-  { key: "vitaminE", label: "Vitamin E", defaultUnit: "mg" },
-  { key: "vitaminK", label: "Vitamin K", defaultUnit: "µg" },
-  { key: "zinc", label: "Zinc", defaultUnit: "mg" },
-];
-
-function createInitialMicronutrientState(): ManualMicronutrientFormState {
-  return MANUAL_MICRONUTRIENTS.reduce((state, nutrient) => {
-    state[nutrient.key] = { value: "", unit: nutrient.defaultUnit };
-    return state;
-  }, {} as ManualMicronutrientFormState);
-}
-
-function buildManualMicronutrientPayload(
-  micronutrients: ManualMicronutrientFormState,
-): PantryItemCreateRequest["micronutrients"] | undefined {
-  const payload: NonNullable<PantryItemCreateRequest["micronutrients"]> = {};
-
-  for (const nutrient of MANUAL_MICRONUTRIENTS) {
-    const field = micronutrients[nutrient.key];
-    if (typeof field.value === "number" && Number.isFinite(field.value) && field.value > 0) {
-      payload[nutrient.key] = { value: field.value, unit: field.unit };
-    }
-  }
-
-  return Object.keys(payload).length > 0 ? payload : undefined;
-}
-
-function getManualNutritionBasisLabel(unit: ConsumptionUnit): string {
-  if (unit === "g") return "per 100g";
-  if (unit === "ml") return "per 100ml";
-  if (unit === "serving") return "per serving";
-  return "per package";
-}
 
 function formatHouseholdValidationError(error: unknown): string {
   return getStaleHouseholdMessage(error);
@@ -128,7 +55,6 @@ function ManualAddPantryItemContent() {
   const [unit, setUnit] = useState<ConsumptionUnit>("package");
   const [amount, setAmount] = useState<number>(1);
   const [calories, setCalories] = useState<number | "">("");
-  const [micronutrients, setMicronutrients] = useState<ManualMicronutrientFormState>(() => createInitialMicronutrientState());
   const [expirationDate, setExpirationDate] = useState<Dayjs | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -222,28 +148,6 @@ function ManualAddPantryItemContent() {
     return "Calories per package (kcal)";
   }, [unit]);
 
-  const micronutrientBasisLabel = useMemo(() => getManualNutritionBasisLabel(unit), [unit]);
-
-  const updateMicronutrientValue = useCallback((key: ManualMicronutrientKey, value: string) => {
-    setMicronutrients((current) => ({
-      ...current,
-      [key]: {
-        ...current[key],
-        value: value === "" ? "" : Number(value),
-      },
-    }));
-  }, []);
-
-  const updateMicronutrientUnit = useCallback((key: ManualMicronutrientKey, value: MicronutrientUnit) => {
-    setMicronutrients((current) => ({
-      ...current,
-      [key]: {
-        ...current[key],
-        unit: value,
-      },
-    }));
-  }, []);
-
   const handleSubmit = useCallback(async () => {
     if (!validatedPantryTarget) return;
 
@@ -261,9 +165,6 @@ function ManualAddPantryItemContent() {
       return;
     }
 
-    // Issue #114 — only one of the three kcal fields is populated; the others are null.
-    // Manual entries also carry optional micronutrients on the same basis as the calorie field.
-    const manualMicronutrientPayload = buildManualMicronutrientPayload(micronutrients);
     const payload: PantryItemCreateRequest = {
       barcode: barcode.trim(),
       name: trimmedName,
@@ -276,10 +177,6 @@ function ManualAddPantryItemContent() {
       manualEntry: true,
       expirationDate: expirationDate ? expirationDate.format("YYYY-MM-DD") : null,
     };
-    if (manualMicronutrientPayload) {
-      payload.micronutrients = manualMicronutrientPayload;
-    }
-
     setIsSubmitting(true);
     try {
       await api.post<PantryItem>(
@@ -292,7 +189,6 @@ function ManualAddPantryItemContent() {
       setUnit("package");
       setAmount(1);
       setCalories("");
-      setMicronutrients(createInitialMicronutrientState());
       setExpirationDate(null);
       router.push(`/households/${validatedPantryTarget.householdId}/stats`);
     } catch (error) {
@@ -309,7 +205,7 @@ function ManualAddPantryItemContent() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [api, amount, barcode, cachedHouseholds, calories, clearSelectedHouseholdId, expirationDate, message, micronutrients, name, router, setHouseholds, unit, validatedPantryTarget]);
+  }, [api, amount, barcode, cachedHouseholds, calories, clearSelectedHouseholdId, expirationDate, message, name, router, setHouseholds, unit, validatedPantryTarget]);
 
   if (validatingPantryTarget || !validatedPantryTarget) {
     return null;
@@ -403,51 +299,6 @@ function ManualAddPantryItemContent() {
               style={{ width: "100%" }}
             />
           </label>
-
-          <details style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 16 }}>
-            <summary style={{ cursor: "pointer", fontWeight: 700 }}>
-              Optional micronutrients
-            </summary>
-            <Paragraph style={{ marginTop: 12, marginBottom: 16 }}>
-              Add micronutrients {micronutrientBasisLabel}. Leave unknown values empty.
-            </Paragraph>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 12,
-              }}
-            >
-              {MANUAL_MICRONUTRIENTS.map((nutrient) => (
-                <label
-                  key={nutrient.key}
-                  style={{ display: "flex", flexDirection: "column", gap: 4 }}
-                >
-                  <span>{nutrient.label}</span>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 76px", gap: 6 }}>
-                    <input
-                      aria-label={`${nutrient.label} micronutrient amount`}
-                      type="number"
-                      min={0}
-                      step="any"
-                      value={micronutrients[nutrient.key].value}
-                      onChange={(e) => updateMicronutrientValue(nutrient.key, e.target.value)}
-                      placeholder="value"
-                    />
-                    <select
-                      aria-label={`${nutrient.label} micronutrient unit`}
-                      value={micronutrients[nutrient.key].unit}
-                      onChange={(e) => updateMicronutrientUnit(nutrient.key, e.target.value as MicronutrientUnit)}
-                    >
-                      <option value="µg">µg</option>
-                      <option value="mg">mg</option>
-                      <option value="g">g</option>
-                    </select>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </details>
 
           <Space>
             <Button

@@ -851,7 +851,7 @@ export default function StatsPage() {
         render: (_: unknown, record: PantryItem) => {
           // Issue #114 — unit-aware calorie computation. If package-size conversion is unknown,
           // still show the standardized kcal basis so the row does not look calorie-empty.
-          const totalCalories = computeItemKcal(record);
+          const totalCalories = computeRemainingKcal(record);
           if (totalCalories !== null) {
             return (
               <Space direction="vertical" size={0}>
@@ -1138,13 +1138,13 @@ export default function StatsPage() {
 
                     {stats?.comparisonToBudget ? (
                       <div>
-                        <Text style={{ fontSize: 12, color: MUTED }}>Period average vs target:</Text>
+                        <Text style={{ fontSize: 12, color: MUTED }}>Household period average vs daily target:</Text>
                         <div style={{ marginTop: 6 }}>
                           <Tag color={comparisonTagColor(stats.comparisonToBudget.status)}>
                             {stats.comparisonToBudget.status.split("_").join(" ")}
                           </Tag>
                           <Text style={{ marginLeft: 8, color: "#3d4f3d" }}>
-                            Avg {stats.averageDailyCalories.toFixed(0)} vs target{" "}
+                            Household avg {stats.averageDailyCalories.toFixed(0)} kcal/day vs target{" "}
                             {stats.dailyCalorieTarget?.toFixed(0) ?? "—"} kcal/day
                           </Text>
                         </div>

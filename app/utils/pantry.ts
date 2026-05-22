@@ -299,14 +299,21 @@ export function detectAvailableUnits(product: Product): ConsumptionUnit[] {
   const amountInfo = parsePackageAmount(product.quantity);
   const nutriments = product.nutriments ?? {};
 
-  if (amountInfo?.basis === "100g" && parseNumber(nutriments["energy-kcal_100g"]) !== null) {
-    units.unshift("g");
-  }
-  if (amountInfo?.basis === "100ml" && parseNumber(nutriments["energy-kcal_100ml"]) !== null) {
-    units.unshift("ml");
-  }
+  const has100g = parseNumber(nutriments["energy-kcal_100g"]) !== null;
+  const has100ml = parseNumber(nutriments["energy-kcal_100ml"]) !== null;
+
+  // Add serving before g/ml so that g/ml can be unshifted into the first (default) position
   if (getKcalPerServing(product) !== null) {
     units.unshift("serving");
+  }
+
+  // Add g when quantity basis is known to be mass, or when no quantity info but 100g data is present
+  if ((amountInfo?.basis === "100g" || (amountInfo === null && has100g)) && has100g) {
+    units.unshift("g");
+  }
+  // Add ml when quantity basis is known to be volume, or when no quantity info but 100ml data is present
+  if ((amountInfo?.basis === "100ml" || (amountInfo === null && has100ml)) && has100ml) {
+    units.unshift("ml");
   }
 
   return units;

@@ -6,7 +6,7 @@ import { useApi } from "@/hooks/useApi";
 import { VirtualPantryAppShell } from "@/components/VirtualPantryAppShell";
 import useSessionStorage from "@/hooks/useSessionStorage";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import type { PantryOverview } from "@/types/pantry";
+import type { ConsumptionUnit, PantryOverview } from "@/types/pantry";
 import type { HouseholdWithRole } from "@/types/household";
 import type { ConsumptionLogEntry } from "@/types/consumption";
 import { formatQuantity } from "@/utils/pantry";
@@ -145,9 +145,7 @@ const DashboardPage: React.FC = () => {
     return (pantry?.items ?? []).filter((item) => item.amount <= 2).length;
   }, [pantry?.items]);
 
-  const totalUnits = useMemo(() => {
-    return (pantry?.items ?? []).reduce((sum, item) => sum + item.amount, 0);
-  }, [pantry?.items]);
+  const distinctProductCount = pantry?.items?.length ?? 0;
 
   const oneWeekAgo = useMemo(() => dayjs().subtract(7, "day"), []);
 
@@ -157,20 +155,26 @@ const DashboardPage: React.FC = () => {
 
   const mostConsumed = useMemo(() => {
     if (!weeklyLogs.length) return null;
-    const totals = new Map<string, number>();
+    const totals = new Map<string, { qty: number; unit: string }>();
     for (const log of weeklyLogs) {
       if (!log.productName || log.productName === REMOVED_ITEM_LABEL) continue;
-      totals.set(log.productName, (totals.get(log.productName) ?? 0) + log.consumedQuantity);
+      const existing = totals.get(log.productName);
+      totals.set(log.productName, {
+        qty: (existing?.qty ?? 0) + log.consumedQuantity,
+        unit: existing?.unit ?? log.consumedUnit ?? "units",
+      });
     }
     let topName: string | null = null;
     let topQty = 0;
-    for (const [name, qty] of totals.entries()) {
+    let topUnit = "units";
+    for (const [name, { qty, unit }] of totals.entries()) {
       if (qty > topQty) {
         topName = name;
         topQty = qty;
+        topUnit = unit;
       }
     }
-    return topName ? { name: topName, qty: topQty } : null;
+    return topName ? { name: topName, qty: topQty, unit: topUnit } : null;
   }, [weeklyLogs]);
 
   const weeklyCalories = useMemo(() => {
@@ -285,10 +289,10 @@ const DashboardPage: React.FC = () => {
 
             <div className={dashboardStyles.kpiRow}>
               <Card className={dashboardStyles.kpiCard}>
-                <div className={dashboardStyles.kpiLabel}>Total items</div>
-                <div className={dashboardStyles.kpiValue}>{totalUnits}</div>
+                <div className={dashboardStyles.kpiLabel}>Distinct products</div>
+                <div className={dashboardStyles.kpiValue}>{distinctProductCount}</div>
                 <div className={dashboardStyles.kpiSub}>
-                  {pantry?.items?.length ?? 0} distinct product{(pantry?.items?.length ?? 0) === 1 ? "" : "s"}
+                  product type{distinctProductCount === 1 ? "" : "s"} in pantry
                 </div>
               </Card>
               <Card className={dashboardStyles.kpiCardOutline}>
@@ -306,7 +310,7 @@ const DashboardPage: React.FC = () => {
                   {mostConsumed ? mostConsumed.name : "No data yet"}
                 </div>
                 <div className={dashboardStyles.kpiSub}>
-                  {mostConsumed ? `${mostConsumed.qty} units / week` : "Record consumption to see trends"}
+                  {mostConsumed ? `${formatQuantity(mostConsumed.qty, mostConsumed.unit as ConsumptionUnit)} / week` : "Record consumption to see trends"}
                 </div>
               </Card>
             </div>
