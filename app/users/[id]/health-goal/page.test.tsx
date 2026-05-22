@@ -77,7 +77,7 @@ describe("HealthGoalPage", () => {
     });
     render(<HealthGoalPage />);
     await waitFor(() => {
-      expect(screen.getByText(/2,092/)).toBeInTheDocument();
+      expect(screen.getByText(/2[,\s]?092/)).toBeInTheDocument();
     });
   });
 

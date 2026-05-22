@@ -362,7 +362,7 @@ describe("StatsPage", () => {
 
     render(<StatsPage />);
 
-    const scanBtn = await screen.findByRole("button", { name: /Scan product/i });
+    const scanBtn = await screen.findByRole("button", { name: /Scan package barcode/i });
     fireEvent.click(scanBtn);
 
     expect(pushMock).toHaveBeenCalledWith(
