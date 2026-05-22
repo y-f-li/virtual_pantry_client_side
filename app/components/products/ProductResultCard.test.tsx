@@ -119,6 +119,7 @@ describe("ProductResultCard", () => {
 
     await waitFor(() => {
       expect(postMock).toHaveBeenCalledWith("/households/10/pantry", {
+        productIndex: null,
         barcode: "123456789",
         name: "Plant Based Caprese",
         amount: 2,
@@ -127,6 +128,8 @@ describe("ProductResultCard", () => {
         kcalPer100g: 220,
         kcalPer100ml: null,
         kcalPerServing: null,
+        packageQuantity: null,
+        packageQuantityUnit: null,
         expirationDate: null,
       });
     });
@@ -161,6 +164,7 @@ describe("ProductResultCard", () => {
 
     await waitFor(() => {
       expect(postMock).toHaveBeenCalledWith("/households/12/pantry", {
+        productIndex: null,
         barcode: "123456789",
         name: "Plant Based Caprese",
         amount: 180,
@@ -169,6 +173,8 @@ describe("ProductResultCard", () => {
         kcalPer100g: 220,
         kcalPer100ml: null,
         kcalPerServing: null,
+        packageQuantity: null,
+        packageQuantityUnit: null,
         expirationDate: null,
       });
     });

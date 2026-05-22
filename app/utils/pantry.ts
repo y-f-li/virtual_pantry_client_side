@@ -1,4 +1,4 @@
-import type { ConsumptionUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
+import type { AmountUnit, ConsumptionUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
 import type { LocalDatasetNutrientAmount, Product } from "@/types/product";
 
 type QuantityUnit = "kg" | "g" | "l" | "ml";
@@ -208,6 +208,45 @@ export function formatAmountDisplay(value: number | null | undefined, maximumFra
   });
 }
 
+
+export function getProductPackageQuantityUnit(product: Product): AmountUnit | null {
+  const basisUnit = normalizeUnit(product.nutrition?.basisUnit);
+  return basisUnit === "g" || basisUnit === "ml" ? basisUnit : null;
+}
+
+export function hasUsableProductPackageQuantityInfo(product: Product): boolean {
+  const packageQuantity = parseNumber(product.packageQuantity);
+  const packageUnit = normalizeUnit(product.packageQuantityUnit);
+  const basisUnit = getProductPackageQuantityUnit(product);
+
+  return packageQuantity !== null
+    && packageQuantity > 0
+    && basisUnit !== null
+    && packageUnit === basisUnit;
+}
+
+export function estimateKcalPerPackageFromQuantity(
+  product: Product,
+  packageQuantity: number,
+  packageQuantityUnit: AmountUnit | null | undefined,
+): number | null {
+  if (!Number.isFinite(packageQuantity) || packageQuantity <= 0) {
+    return null;
+  }
+
+  if (packageQuantityUnit === "g") {
+    const per100g = getKcalPer100g(product);
+    return per100g !== null ? Number(((per100g * packageQuantity) / 100).toFixed(2)) : null;
+  }
+
+  if (packageQuantityUnit === "ml") {
+    const per100ml = getKcalPer100ml(product);
+    return per100ml !== null ? Number(((per100ml * packageQuantity) / 100).toFixed(2)) : null;
+  }
+
+  return null;
+}
+
 export function hasUsablePackageQuantityInfo(item: Pick<PantryItem, "packageQuantity" | "packageQuantityUnit">): boolean {
   const packageQuantity = parseNumber(item.packageQuantity);
   const packageUnit = normalizeUnit(item.packageQuantityUnit);
@@ -351,6 +390,7 @@ export function buildPantryItemPayload(
   unit: ConsumptionUnit,
 ): PantryItemCreateRequest {
   return {
+    productIndex: product.productIndex ?? null,
     barcode: (product.barcode ?? "").trim(),
     name: (product.name ?? "").trim(),
     amount,
@@ -359,5 +399,7 @@ export function buildPantryItemPayload(
     kcalPer100g: getKcalPer100g(product),
     kcalPer100ml: getKcalPer100ml(product),
     kcalPerServing: getKcalPerServing(product),
+    packageQuantity: product.packageQuantity ?? null,
+    packageQuantityUnit: getProductPackageQuantityUnit(product),
   };
 }

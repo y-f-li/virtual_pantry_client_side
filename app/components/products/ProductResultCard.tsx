@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import useSessionStorage from "@/hooks/useSessionStorage";
-import type { ConsumptionUnit, PantryItem } from "@/types/pantry";
+import type { AmountUnit, ConsumptionUnit, PantryItem } from "@/types/pantry";
 import type { Product } from "@/types/product";
 import type { HouseholdWithRole } from "@/types/household";
 import {
@@ -15,7 +15,10 @@ import {
   getKcalPer100ml,
   getKcalPerServing,
   estimateKcalPerPackage,
+  estimateKcalPerPackageFromQuantity,
   getProductCalorieBasisDisplay,
+  getProductPackageQuantityUnit,
+  hasUsableProductPackageQuantityInfo,
   PACKAGE_QUANTITY_UNAVAILABLE_NOTE,
   shouldShowProductPackageQuantityUnavailableNote,
 } from "@/utils/pantry";
@@ -265,6 +268,8 @@ export default function ProductResultCard({
   );
   const isLocalDataset = product.dataSource === "local_dataset";
   const isLocalFallback = product.localFallback === true || product.dataSource === "local_csv_fallback" || isLocalDataset;
+  const productPackageQuantityUnit = useMemo(() => getProductPackageQuantityUnit(product), [product]);
+  const requiresPackageQuantityInput = isLocalDataset && !hasUsableProductPackageQuantityInfo(product);
   const effectivePantryContext = useMemo(
     () => pantryContext ?? readPantryContextFromUrl(),
     [pantryContext],
@@ -278,8 +283,29 @@ export default function ProductResultCard({
   const [manualKcalPerPackage, setManualKcalPerPackage] = useState<string>(
     () => estimateKcalPerPackage(product)?.toString() ?? "",
   );
+  const [manualPackageQuantity, setManualPackageQuantity] = useState<string>("");
+  const [manualPackageQuantityUnit, setManualPackageQuantityUnit] = useState<AmountUnit>(
+    () => productPackageQuantityUnit ?? "g",
+  );
   const [expirationDate, setExpirationDate] = useState<Dayjs | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const defaultUnit = availableUnits[0];
+    setSelectedUnit(defaultUnit);
+    setAmount(getDefaultAmount(product, defaultUnit));
+    setManualKcalPerPackage(estimateKcalPerPackage(product)?.toString() ?? "");
+    setManualPackageQuantity("");
+    setManualPackageQuantityUnit(productPackageQuantityUnit ?? "g");
+  }, [availableUnits, product, productPackageQuantityUnit]);
+
+  const manualPackageQuantityValue = Number(manualPackageQuantity);
+  const hasValidManualPackageQuantity =
+    !requiresPackageQuantityInput ||
+    (Number.isFinite(manualPackageQuantityValue) && manualPackageQuantityValue > 0);
+  const manualPackageKcalEstimate = requiresPackageQuantityInput
+    ? estimateKcalPerPackageFromQuantity(product, manualPackageQuantityValue, manualPackageQuantityUnit)
+    : null;
 
   // Issue #114 — switching unit resets amount to the sensible default for that unit
   // Issue #114 — useCallback prevents unnecessary re-renders if parent memoizes ProductResultCard
@@ -294,8 +320,12 @@ export default function ProductResultCard({
   // Issue #114 — real-time calorie estimate shown as user adjusts amount and unit
   const liveKcal = useMemo(() => {
     if (selectedUnit === "package") {
-      const perPackage = parseFloat(manualKcalPerPackage);
-      return Number.isFinite(perPackage) && perPackage > 0 ? Number((perPackage * amount).toFixed(1)) : null;
+      const perPackage = requiresPackageQuantityInput
+        ? manualPackageKcalEstimate
+        : parseFloat(manualKcalPerPackage);
+      return Number.isFinite(perPackage) && Number(perPackage) > 0
+        ? Number((Number(perPackage) * amount).toFixed(1))
+        : null;
     }
     if (selectedUnit === "g") {
       const per100g = getKcalPer100g(product);
@@ -310,7 +340,7 @@ export default function ProductResultCard({
       return perServing !== null ? Number((perServing * amount).toFixed(1)) : null;
     }
     return null;
-  }, [product, selectedUnit, amount, manualKcalPerPackage]);
+  }, [product, selectedUnit, amount, manualKcalPerPackage, manualPackageKcalEstimate, requiresPackageQuantityInput]);
 
   const handleAddToPantry = async (): Promise<void> => {
     if (!effectivePantryContext) {
@@ -335,6 +365,18 @@ export default function ProductResultCard({
       return;
     }
 
+    if (requiresPackageQuantityInput && !hasValidManualPackageQuantity) {
+      message.warning("Enter how much one package contains before adding this product.");
+      return;
+    }
+
+    if (requiresPackageQuantityInput
+        && productPackageQuantityUnit
+        && manualPackageQuantityUnit !== productPackageQuantityUnit) {
+      message.warning(`Package quantity unit must match the nutrition basis (${productPackageQuantityUnit}).`);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -342,8 +384,16 @@ export default function ProductResultCard({
       const payload = {
         ...basePayload,
         kcalPerPackage: selectedUnit === "package"
-          ? (parseFloat(manualKcalPerPackage) || null)
+          ? (requiresPackageQuantityInput
+              ? manualPackageKcalEstimate
+              : (parseFloat(manualKcalPerPackage) || basePayload.kcalPerPackage))
           : basePayload.kcalPerPackage,
+        packageQuantity: requiresPackageQuantityInput
+          ? manualPackageQuantityValue
+          : basePayload.packageQuantity,
+        packageQuantityUnit: requiresPackageQuantityInput
+          ? manualPackageQuantityUnit
+          : basePayload.packageQuantityUnit,
         expirationDate: expirationDate ? expirationDate.format("YYYY-MM-DD") : null,
       };
       await api.post<PantryItem>(
@@ -487,14 +537,46 @@ export default function ProductResultCard({
                   aria-label={`Amount in ${selectedUnit}`}
                   type="number"
                   min={0.01}
-                  step={selectedUnit === "package" || selectedUnit === "serving" ? 1 : 0.1}
+                  step={0.1}
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
                   className={styles.quantityInput}
                 />
               </label>
 
-              {selectedUnit === "package" && (
+              {requiresPackageQuantityInput ? (
+                <label className={styles.quantityField}>
+                  <span className={styles.quantityLabel}>One package contains</span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      aria-label="Package quantity"
+                      type="number"
+                      min={0.01}
+                      step={0.1}
+                      value={manualPackageQuantity}
+                      onChange={(e) => setManualPackageQuantity(e.target.value)}
+                      placeholder={manualPackageQuantityUnit === "ml" ? "e.g. 500" : "e.g. 400"}
+                      className={styles.quantityInput}
+                    />
+                    <select
+                      aria-label="Package quantity unit"
+                      value={manualPackageQuantityUnit}
+                      onChange={(e) => setManualPackageQuantityUnit(e.target.value as AmountUnit)}
+                      className={styles.quantityInput}
+                      disabled={Boolean(productPackageQuantityUnit)}
+                      style={{ maxWidth: 96 }}
+                    >
+                      <option value="g">g</option>
+                      <option value="ml">ml</option>
+                    </select>
+                  </div>
+                  <span className={styles.metaHint}>
+                    Required because the local dataset does not know the package size.
+                  </span>
+                </label>
+              ) : null}
+
+              {selectedUnit === "package" && !isLocalDataset && (
                 <label className={styles.quantityField}>
                   <span className={styles.quantityLabel}>Kcal per package (optional)</span>
                   <input
@@ -531,7 +613,7 @@ export default function ProductResultCard({
               <button
                 type="button"
                 onClick={() => void handleAddToPantry()}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !hasValidManualPackageQuantity}
                 className={styles.addButton}
               >
                 {isSubmitting ? "Adding..." : "Add to pantry"}
