@@ -40,6 +40,7 @@ export interface PantryItemMicronutrientCreateRequest {
 }
 
 export interface PantryItemCreateRequest {
+  productIndex?: number | null;
   barcode: string;
   name: string;
   amount: number;
@@ -48,6 +49,8 @@ export interface PantryItemCreateRequest {
   kcalPer100g?: number | null;
   kcalPer100ml?: number | null;
   kcalPerServing?: number | null;
+  packageQuantity?: number | string | null;
+  packageQuantityUnit?: AmountUnit | null;
   manualEntry?: boolean;
   expirationDate?: string | null;
   micronutrients?: Partial<Record<ManualMicronutrientKey, PantryItemMicronutrientCreateRequest>>;

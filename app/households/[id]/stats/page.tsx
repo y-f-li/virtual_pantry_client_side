@@ -328,8 +328,8 @@ function getMaxConsumptionAmount(item: PantryItem, unit: ConsumptionUnit): numbe
   return undefined;
 }
 
-function getConsumptionStep(unit: ConsumptionUnit): number {
-  return unit === "package" || unit === "serving" ? 1 : 0.1;
+function getConsumptionStep(_unit: ConsumptionUnit): number {
+  return 0.1;
 }
 
 function estimateSuggestedCalories(item: PantryItem): number | null {
