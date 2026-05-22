@@ -32,7 +32,10 @@ These instructions will get you a copy of the project up and running on your loc
 
 Make sure you have the following installed:
 
+**Frontend**
 - [Node.js 22+](https://nodejs.org/) and npm
+
+**Backend**
 - [Java 17+](https://adoptium.net/)
 - An [OpenAI API key](https://platform.openai.com/api-keys) (required for meal food recognition)
 - An Azure Document Intelligence endpoint and API key (required for receipt scanning): set `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` and `AZURE_DOCUMENT_INTELLIGENCE_API_KEY`
