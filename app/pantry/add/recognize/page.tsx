@@ -63,6 +63,10 @@ function getCandidateCalories(candidate: RecognizedFood): number | null {
 }
 
 function getCandidateUnit(candidate: RecognizedFood): ConsumptionUnit {
+  if (typeof candidate.kcalPer100g === "number" && candidate.kcalPer100g > 0) {
+    if (isSupportedPrefillUnit(candidate.unit)) return candidate.unit;
+    return "g";
+  }
   if (candidate.kcalPerServing && candidate.kcalPerServing > 0) {
     return "serving";
   }
@@ -87,6 +91,7 @@ function FoodRecognitionPageInner() {
   const api = useApi();
   const { message } = App.useApp();
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { value: token } = useSessionStorage<string>("token", "");
   const { value: storedUserId } = useSessionStorage<string>("userId", "");
   const { value: cachedHouseholds, set: setHouseholds } = useSessionStorage<HouseholdWithRole[]>("households", []);
@@ -260,15 +265,23 @@ function FoodRecognitionPageInner() {
                 <Card title={<span style={{ fontSize: 24, fontWeight: 700, color: "#1f2d1f" }}>Choose a meal photo</span>}>
                   <Space orientation="vertical" size="large" style={{ width: "100%", display: "flex" }}>
                     <Space wrap size="middle">
-                      <Button size="large" icon={<UploadOutlined />} onClick={() => cameraInputRef.current?.click()}>
+                      <Button size="large" icon={<UploadOutlined />} onClick={() => fileInputRef.current?.click()}>
                         Choose meal image
                       </Button>
                       <Button size="large" icon={<CameraOutlined />} onClick={() => cameraInputRef.current?.click()}>
                         Use camera
                       </Button>
                       <input
-                        ref={cameraInputRef}
+                        ref={fileInputRef}
                         aria-label="Meal photo"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(event) => updateSelectedFile(event.target.files?.[0])}
+                      />
+                      <input
+                        ref={cameraInputRef}
+                        aria-label="Meal photo camera"
                         type="file"
                         accept="image/*"
                         capture="environment"
