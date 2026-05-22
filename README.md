@@ -24,6 +24,34 @@ Virtual Pantry is a collaborative calorie and nutrition tracking app for househo
 
 ## High-Level Components
 
+### 1. Household and pantry management
+
+This part covers everything related to the shared household pantry on the frontend. [`app/households/page.tsx`](app/households/page.tsx) lets users create a new household or join one with an invite code. [`app/households/[id]/page.tsx`](app/households/[id]/page.tsx) is the main pantry view: it displays the full pantry inventory, lets users consume or remove items, and shows the calorie budget summary. [`app/households/[id]/members/page.tsx`](app/households/[id]/members/page.tsx) manages household members and shows the invite code. [`app/households/[id]/stats/page.tsx`](app/households/[id]/stats/page.tsx) shows household-level consumption statistics and budget history.
+
+Real-time pantry updates are handled by [`app/hooks/usePantryWebSocket.ts`](app/hooks/usePantryWebSocket.ts), which opens a STOMP-over-SockJS connection and refreshes the pantry view whenever the backend broadcasts a change — so all household members see the latest pantry state without manually reloading.
+
+### 2. Product lookup and local dataset search
+
+This part handles finding products to add to the pantry. [`app/pantry/add/manual/page.tsx`](app/pantry/add/manual/page.tsx) supports name-based product search and fully manual entry. [`app/pantry/add/scan/page.tsx`](app/pantry/add/scan/page.tsx) supports barcode lookup and image-based meal recognition. [`app/open-food-facts/page.tsx`](app/open-food-facts/page.tsx) provides a standalone product search page for looking up nutrition information without directly adding to the pantry.
+
+[`app/components/products/ProductResultCard.tsx`](app/components/products/ProductResultCard.tsx) is the shared component used across all product lookup flows to display a product result with its name, brand, nutrition data, and quantity inputs. [`app/utils/productExport.ts`](app/utils/productExport.ts) contains helpers for converting product data into the format expected by the pantry add API.
+
+### 3. Receipt scanning and product matching
+
+This part implements the receipt-based pantry add flow. [`app/pantry/add/receipt/page.tsx`](app/pantry/add/receipt/page.tsx) lets users upload a receipt image, which is sent to the backend for OCR processing. After OCR, the frontend stores the extracted receipt session in local storage and navigates to the review screen.
+
+[`app/pantry/add/receipt/review/page.tsx`](app/pantry/add/receipt/review/page.tsx) is the review step: it shows each extracted receipt line alongside candidate product matches from the local dataset. The user can inspect each item, select the right product match, edit quantities, remove incorrect entries, and confirm which items to add to the pantry. This two-step flow (upload → review) mirrors the backend's two-phase approach of OCR extraction followed by product candidate matching.
+
+### 4. Nutrition, micronutrients, and daily intake
+
+This part covers the personal nutrition and health goal side of the application. [`app/users/[id]/health-goal/page.tsx`](app/users/[id]/health-goal/page.tsx) lets users enter their physical stats and weight goal, then displays a recommended daily calorie target calculated by the backend (using the Mifflin-St Jeor model with age-based deficit limits). [`app/users/[id]/details/edit/page.tsx`](app/users/[id]/details/edit/page.tsx) manages the personal profile including birth date and life stage group, which the backend uses to determine micronutrient reference values. [`app/users/[id]/details/nutrition-reference/page.tsx`](app/users/[id]/details/nutrition-reference/page.tsx) displays the micronutrient reference table for the user's age and life stage alongside their actual daily intake.
+
+Household-level calorie statistics, including consumption trends and budget tracking, are shown in [`app/households/[id]/stats/page.tsx`](app/households/[id]/stats/page.tsx) using Recharts visualizations.
+
+### How the components work together
+
+The household pantry page is the central point of the frontend. Products found through name search, barcode scan, or receipt review all feed into the same pantry add flow. Once items are in the pantry and users consume them, the real-time WebSocket hook keeps every household member's pantry view current. The consumption data drives both the household statistics page and the personal nutrition tracking pages, connecting the shared pantry to individual health goals.
+
 ## Launch & Deployment
 
 ### Getting Started
