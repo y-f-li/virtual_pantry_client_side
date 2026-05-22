@@ -106,7 +106,7 @@ export default function HouseholdsPage() {
     setHouseholds(updater(households));
   };
 
-  const handleDeleteHousehold = async (householdId: number) => {
+  const handleDeletePantry = async (householdId: number) => {
     setDeletingId(householdId);
     try {
       await authDelete(`/households/${householdId}`);
@@ -114,9 +114,9 @@ export default function HouseholdsPage() {
       if (selectedHouseholdId === householdId) {
         clearSelectedHouseholdId();
       }
-      message.success("Household deleted.");
+      message.success("Pantry deleted.");
     } catch (error) {
-      message.error(error instanceof Error ? error.message : "Failed to delete household.");
+      message.error(error instanceof Error ? error.message : "Failed to delete pantry.");
     } finally {
       setDeletingId(null);
     }
@@ -124,7 +124,7 @@ export default function HouseholdsPage() {
 
   const handleCreateHousehold = async () => {
     if (!createName.trim()) {
-      message.warning("Please enter a household name.");
+      message.warning("Please enter a pantry name.");
       return;
     }
 
@@ -138,12 +138,12 @@ export default function HouseholdsPage() {
       setSelectedHouseholdId(created.householdId);
       setLastGeneratedCode(created.inviteCode);
       setCreateName("");
-      message.success("Household created successfully.");
+      message.success("Pantry created successfully.");
       router.push(
-        `/households/${created.householdId}?name=${encodeURIComponent(created.name)}`,
+        `/households/${created.householdId}/stats`,
       );
     } catch (error) {
-      message.error(error instanceof Error ? error.message : "Failed to create household.");
+      message.error(error instanceof Error ? error.message : "Failed to create pantry.");
     } finally {
       setCreating(false);
     }
@@ -190,9 +190,9 @@ export default function HouseholdsPage() {
       });
       setSelectedHouseholdId(joined.householdId);
       setJoinCode("");
-      message.success("Joined household successfully.");
+      message.success("Joined pantry successfully.");
     } catch (error) {
-      message.error(error instanceof Error ? error.message : "Failed to join household.");
+      message.error(error instanceof Error ? error.message : "Failed to join pantry.");
     } finally {
       setJoining(false);
     }
@@ -201,7 +201,7 @@ export default function HouseholdsPage() {
   const handleOpenPantry = (household: HouseholdWithRole) => {
     setSelectedHouseholdId(household.householdId);
     router.push(
-      `/households/${household.householdId}?name=${encodeURIComponent(household.name)}`,
+      `/households/${household.householdId}/stats`,
     );
   };
 
@@ -225,7 +225,7 @@ export default function HouseholdsPage() {
       <div className={styles.header}>
         <div>
           <Title level={1} className={styles.title}>
-            Household Management
+            Pantry Management
           </Title>
           <Paragraph className={styles.subtitle}>
             Organize and curate your shared pantry ecosystems.
@@ -235,12 +235,12 @@ export default function HouseholdsPage() {
 
       <section className={styles.section}>
         <Title level={3} className={styles.sectionTitle}>
-          Create Household
+          Create Pantry
         </Title>
         <Card className={styles.joinCard}>
           <Space orientation="vertical" style={{ width: "100%" }} size="middle">
             <Input
-              placeholder="Enter household name"
+              placeholder="Enter pantry name"
               value={createName}
               onChange={(event) => setCreateName(event.target.value)}
               onPressEnter={() => void handleCreateHousehold()}
@@ -251,7 +251,7 @@ export default function HouseholdsPage() {
               onClick={handleCreateHousehold}
               loading={creating}
             >
-              Create Household
+              Create Pantry
             </Button>
           </Space>
         </Card>
@@ -260,13 +260,13 @@ export default function HouseholdsPage() {
       <Row gutter={[16, 16]} className={styles.stats}>
         <Col xs={24} sm={12} lg={6}>
           <Card className={styles.statCard}>
-            <div className={styles.statLabel}>Active households</div>
+            <div className={styles.statLabel}>Active pantries</div>
             <div className={styles.statValue}>{households.length}</div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card className={styles.statCard}>
-            <div className={styles.statLabel}>Owned households</div>
+            <div className={styles.statLabel}>Owned pantries</div>
             <div className={styles.statValue}>{ownedHouseholds.length}</div>
           </Card>
         </Col>
@@ -286,12 +286,12 @@ export default function HouseholdsPage() {
 
       <section className={styles.section}>
         <Title level={3} className={styles.sectionTitle}>
-          My Households
+          My Pantries
         </Title>
         <Card className={styles.joinCard}>
           {households.length === 0 ? (
             <Paragraph type="secondary" style={{ margin: 0 }}>
-              No households yet. Create one below or join with an invite code.
+              No pantries yet. Create one below or join with an invite code.
             </Paragraph>
           ) : (
             <Row gutter={[16, 16]}>
@@ -342,7 +342,7 @@ export default function HouseholdsPage() {
                             icon={<DeleteOutlined />}
                             block
                             loading={deletingId === household.householdId}
-                            onClick={() => void handleDeleteHousehold(household.householdId)}
+                            onClick={() => void handleDeletePantry(household.householdId)}
                           >
                             Delete
                           </Button>
@@ -359,7 +359,7 @@ export default function HouseholdsPage() {
 
       <section className={styles.section}>
         <Title level={3} className={styles.sectionTitle}>
-          Join a Household
+          Join a Pantry
         </Title>
         <Card className={styles.joinCard}>
           <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
@@ -376,12 +376,12 @@ export default function HouseholdsPage() {
                 onPressEnter={() => void handleJoinHousehold()}
               />
               <Button type="primary" onClick={handleJoinHousehold} loading={joining}>
-                Join Household
+                Join Pantry
               </Button>
             </div>
             <div className={styles.joinInfoBox}>
               Codes are unique, case-sensitive, and typically expire within 7 days. If you are having
-              trouble joining, contact the household owner for a new code.
+              trouble joining, contact the pantry owner for a new code.
             </div>
             {lastGeneratedCode && (
               <div className={styles.inviteBox}>Latest generated invite code: {lastGeneratedCode}</div>
@@ -401,7 +401,7 @@ export default function HouseholdsPage() {
             locale={{ emptyText: "No pending invitations currently." }}
             dataSource={invitationRows}
             columns={[
-              { title: "Household", dataIndex: "household", key: "household" },
+              { title: "Pantry", dataIndex: "household", key: "household" },
               { title: "Invite Code", dataIndex: "inviteCode", key: "inviteCode" },
               { title: "Created", dataIndex: "created", key: "created" },
               { title: "Expires", dataIndex: "expires", key: "expires" },

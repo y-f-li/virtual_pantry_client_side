@@ -158,11 +158,7 @@ function PantryScanPageInner() {
       return;
     }
 
-    router.push(
-      `/households/${pantryTarget.householdId}?name=${encodeURIComponent(
-        pantryTarget.householdName ?? `Household ${pantryTarget.householdId}`,
-      )}`,
-    );
+    router.push(`/households/${pantryTarget.householdId}/stats`);
   };
 
   const handleManualBarcode = () => {

@@ -309,7 +309,7 @@ describe("StatsPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Test Home — Pantry stats/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Home/i)).toBeInTheDocument();
       expect(screen.getByText(/1[, ]860 kcal/i)).toBeInTheDocument();
       expect(screen.getByText(/2[, ]450 kcal \/ day/i)).toBeInTheDocument();
     });

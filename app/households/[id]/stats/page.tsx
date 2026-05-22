@@ -943,13 +943,13 @@ export default function StatsPage() {
         <Button
           size="middle"
           icon={<ArrowLeftOutlined />}
-          onClick={() => router.push(`/households/${householdId}`)}
+          onClick={() => router.push("/households")}
           style={{ marginBottom: 18, borderRadius: 12, fontWeight: 600 }}
         >
-          Pantry
+          Manage
         </Button>
         <Title level={2} className={statsStyles.pageTitle}>
-          {householdName} — Pantry stats
+          {householdName}
         </Title>
         <Paragraph className={statsStyles.pageSubtitle}>
           Energy reservoir, consumption flow, and daily calorie target — with current inventory and a record of

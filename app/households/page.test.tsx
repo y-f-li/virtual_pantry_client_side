@@ -159,7 +159,7 @@ describe("Households page", () => {
     mockSelectedHouseholdId = null;
   });
 
-  it("redirects to the household pantry screen after successful creation", async () => {
+  it("redirects to the pantry stats screen after successful creation", async () => {
   mockFetch.mockImplementationOnce(() =>
     mockJsonResponse(true, {
       householdId: 10,
@@ -171,13 +171,13 @@ describe("Households page", () => {
 
   render(<HouseholdsPage />);
 
-  fireEvent.change(screen.getByPlaceholderText("Enter household name"), {
+  fireEvent.change(screen.getByPlaceholderText("Enter pantry name"), {
     target: { value: "Test House" },
   });
-  fireEvent.click(screen.getByRole("button", { name: /Create Household/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Create Pantry/i }));
 
   await waitFor(() => {
-    expect(pushMock).toHaveBeenCalledWith("/households/10?name=Test%20House");
+    expect(pushMock).toHaveBeenCalledWith("/households/10/stats");
   });
   });
 
@@ -191,7 +191,7 @@ describe("Households page", () => {
   fireEvent.change(screen.getByPlaceholderText("Enter invite code (e.g. AB-12345)"), {
     target: { value: "INVALID" },
   });
-  fireEvent.click(screen.getByRole("button", { name: /Join Household/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Join Pantry/i }));
 
   await waitFor(() => {
     expect(errorMock).toHaveBeenCalledWith("404: Invite code is invalid.");
@@ -213,7 +213,7 @@ describe("Households page", () => {
   fireEvent.change(screen.getByPlaceholderText("Enter invite code (e.g. AB-12345)"), {
     target: { value: "EXPIRED" },
   });
-  fireEvent.click(screen.getByRole("button", { name: /Join Household/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Join Pantry/i }));
 
   await waitFor(() => {
     expect(errorMock).toHaveBeenCalledWith(
@@ -226,18 +226,18 @@ describe("Households page", () => {
   it("renders navigation and household management", () => {
     render(<HouseholdsPage />);
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Households")).toBeInTheDocument();
+    expect(screen.getByText("Manage")).toBeInTheDocument();
     expect(screen.getByText("Pantry")).toBeInTheDocument();
     expect(screen.getByText("Recipes")).toBeInTheDocument();
     expect(screen.getByText("tingting-xu824")).toBeInTheDocument();
-    expect(screen.getByText("Household Management")).toBeInTheDocument();
+    expect(screen.getByText("Pantry Management")).toBeInTheDocument();
   });
 
   it("sidebar Pantry shows info when there is no household", () => {
     render(<HouseholdsPage />);
     fireEvent.click(screen.getByText("Pantry").closest("button") as HTMLButtonElement);
     expect(infoMock).toHaveBeenCalledWith(
-      "Create or join a household first, then open Pantry.",
+      "Create or join a pantry first, then open Pantry.",
     );
     expect(pushMock).not.toHaveBeenCalled();
   });
@@ -249,7 +249,7 @@ describe("Households page", () => {
     render(<HouseholdsPage />);
     fireEvent.click(screen.getByText("Pantry").closest("button") as HTMLButtonElement);
     expect(setSelectedHouseholdIdMock).toHaveBeenCalledWith(7);
-    expect(pushMock).toHaveBeenCalledWith("/households/7?name=Home");
+    expect(pushMock).toHaveBeenCalledWith("/households/7/stats");
   });
 
   it("creates a household and stores it in local storage", async () => {
@@ -264,10 +264,10 @@ describe("Households page", () => {
 
     render(<HouseholdsPage />);
 
-    fireEvent.change(screen.getByPlaceholderText("Enter household name"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter pantry name"), {
       target: { value: "Test House" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /Create Household/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Pantry/i }));
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
@@ -277,7 +277,7 @@ describe("Households page", () => {
           headers: expect.objectContaining({ Authorization: "stored-token" }),
         }),
       );
-      expect(successMock).toHaveBeenCalledWith("Household created successfully.");
+      expect(successMock).toHaveBeenCalledWith("Pantry created successfully.");
       expect(setHouseholdsMock).toHaveBeenCalledWith([
         {
           householdId: 10,
@@ -305,7 +305,7 @@ describe("Households page", () => {
     fireEvent.change(screen.getByPlaceholderText("Enter invite code (e.g. AB-12345)"), {
       target: { value: "JOIN22" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /Join Household/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Join Pantry/i }));
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
@@ -315,7 +315,7 @@ describe("Households page", () => {
           headers: expect.objectContaining({ Authorization: "stored-token" }),
         }),
       );
-      expect(successMock).toHaveBeenCalledWith("Joined household successfully.");
+      expect(successMock).toHaveBeenCalledWith("Joined pantry successfully.");
       expect(setHouseholdsMock).toHaveBeenCalledWith([
         {
           householdId: 22,
@@ -328,7 +328,7 @@ describe("Households page", () => {
     });
   });
 
-  it("View Pantry opens the pantry page for a stored household", () => {
+  it("View Pantry opens the stats page for a stored pantry", () => {
     mockStoredHouseholds = [
       {
         householdId: 10,
@@ -343,14 +343,14 @@ describe("Households page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /View Pantry/i }));
     expect(setSelectedHouseholdIdMock).toHaveBeenCalledWith(10);
-    expect(pushMock).toHaveBeenCalledWith("/households/10?name=Test%20House");
+    expect(pushMock).toHaveBeenCalledWith("/households/10/stats");
   });
 
   it("shows warning for empty inputs", () => {
     render(<HouseholdsPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Create Household/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Join Household/i }));
-    expect(warningMock).toHaveBeenCalledWith("Please enter a household name.");
+    fireEvent.click(screen.getByRole("button", { name: /Create Pantry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Join Pantry/i }));
+    expect(warningMock).toHaveBeenCalledWith("Please enter a pantry name.");
     expect(warningMock).toHaveBeenCalledWith("Please enter an invite code.");
   });
 
@@ -429,7 +429,7 @@ describe("Households page", () => {
     );
   });
 
-  it("Delete Household button is only visible to owners", () => {
+  it("Delete button is only visible to pantry owners", () => {
     mockStoredHouseholds = [
       { householdId: 10, name: "Owned House", inviteCode: "OWN", ownerId: 1, role: "owner" },
       { householdId: 11, name: "Joined House", inviteCode: "JON", ownerId: 2, role: "member" },
@@ -461,7 +461,7 @@ describe("Households page", () => {
         expect.objectContaining({ method: "DELETE", headers: expect.objectContaining({ Authorization: "stored-token" }) }),
       );
       expect(setHouseholdsMock).toHaveBeenCalledWith([]);
-      expect(successMock).toHaveBeenCalledWith("Household deleted.");
+      expect(successMock).toHaveBeenCalledWith("Pantry deleted.");
     });
   });
 

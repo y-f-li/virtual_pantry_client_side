@@ -632,7 +632,7 @@ function OpenFoodFactsPortalContent() {
           onClick={backToPantryStats}
           style={{ marginBottom: 18, borderRadius: 12, fontWeight: 600 }}
         >
-          {pantryTarget ? "Pantry stats" : "Households"}
+          {pantryTarget ? "Pantry stats" : "Manage"}
         </Button>
         <Title level={1} className={styles.pageTitle}>
           Product Lookup Portal
