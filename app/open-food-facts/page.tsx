@@ -606,7 +606,7 @@ function OpenFoodFactsPortalContent() {
       return undefined;
     }
 
-    let retryTimeoutId: ReturnType<typeof window.setTimeout> | undefined;
+    let retryTimeoutId: number | undefined;
 
     const scrollToReceiptResults = () => {
       const receiptResultsElement = receiptResultsRef.current;
