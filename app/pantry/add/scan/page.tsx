@@ -265,7 +265,7 @@ function PantryScanPageInner() {
                     lineHeight: 1.05,
                   }}
                 >
-                  Scan product image
+                  Scan package barcode
                 </Title>
                 <Paragraph
                   style={{
@@ -403,7 +403,7 @@ function PantryScanPageInner() {
                 <Card
                   title={
                     <span style={{ fontSize: 24, fontWeight: 700, color: "#1f2d1f" }}>
-                      Choose an image
+                      Choose a package image
                     </span>
                   }
                   style={{
@@ -523,7 +523,7 @@ function PantryScanPageInner() {
                       >
                         <Image
                           src={previewUrl}
-                          alt="Selected product image"
+                          alt="Selected package barcode image"
                           width={320}
                           style={{
                             objectFit: "contain",

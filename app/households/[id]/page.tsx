@@ -554,7 +554,7 @@ export default function HouseholdPantryPage() {
                   <Paragraph style={{ margin: 0, color: "#5f6e60", maxWidth: 980 }}>
                     Choose how you want to add the next item. Use Open Food Facts
                     for direct barcode or name lookup, scan a package image, or
-                    upload a receipt to extract purchased items.
+                    upload a meal photo or receipt to extract items.
                   </Paragraph>
 
                   <Space wrap size="small" style={{ paddingTop: 8 }}>
@@ -584,7 +584,21 @@ export default function HouseholdPantryPage() {
                         )
                       }
                     >
-                      Scan product image
+                      Scan package barcode
+                    </Button>
+
+                    <Button
+                      size="middle"
+                      icon={<CameraOutlined />}
+                      onClick={() =>
+                        router.push(
+                          `/pantry/add/recognize?householdId=${householdId}&householdName=${encodeURIComponent(
+                            householdName,
+                          )}`,
+                        )
+                      }
+                    >
+                      Recognize food from photo
                     </Button>
 
                     <Button

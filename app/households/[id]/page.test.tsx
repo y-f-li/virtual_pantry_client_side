@@ -236,7 +236,7 @@ describe("Household pantry page", () => {
     });
 
     fireEvent.click(
-      screen.getByRole("button", { name: /Scan product image/i }),
+      screen.getByRole("button", { name: /Scan package barcode/i }),
     );
 
     expect(pushMock).toHaveBeenCalledWith(

@@ -101,3 +101,19 @@ export interface PortionEstimateResponse {
   estimatedRange?: string | null;
   unit: AmountUnit | null;
 }
+
+export interface RecognizedFood {
+  name: string;
+  kcalPer100g?: number | null;
+  kcalPerServing?: number | null;
+  suggestedAmount?: number | null;
+  unit?: ConsumptionUnit | null;
+  confidence?: number | null;
+}
+
+export interface FoodRecognitionResponse {
+  status: "RECOGNIZED" | "MANUAL_FALLBACK";
+  detectedFoods: string[];
+  recognizedFoods?: RecognizedFood[];
+  message: string;
+}

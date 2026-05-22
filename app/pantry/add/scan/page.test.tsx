@@ -130,9 +130,9 @@ describe("PantryScanPage", () => {
   it("renders scan page and pantry target", () => {
     render(<PantryScanPage />);
 
-    expect(screen.getByText("Scan product image")).toBeInTheDocument();
+    expect(screen.getByText("Scan package barcode")).toBeInTheDocument();
     expect(screen.getByText("Test Household")).toBeInTheDocument();
-    expect(screen.getByText("Choose an image")).toBeInTheDocument();
+    expect(screen.getByText("Choose a package image")).toBeInTheDocument();
   });
 
   it("shows preview after selecting a file", () => {
@@ -140,7 +140,7 @@ describe("PantryScanPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Mock upload trigger" }));
 
-    expect(screen.getByAltText("Selected product image")).toBeInTheDocument();
+    expect(screen.getByAltText("Selected package barcode image")).toBeInTheDocument();
     expect(screen.getByText("Image ready")).toBeInTheDocument();
   });
 

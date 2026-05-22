@@ -132,6 +132,7 @@ function ManualAddPantryItemContent() {
   const [expirationDate, setExpirationDate] = useState<Dayjs | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const appliedPrefillRef = useRef(false);
 
   const requestedHouseholdId = useMemo(() => {
     const param = searchParams.get("householdId");
@@ -255,6 +256,31 @@ function ManualAddPantryItemContent() {
     setExpirationDate(null);
     setSuccessNotice(null);
   }, []);
+
+  useEffect(() => {
+    if (appliedPrefillRef.current) return;
+    appliedPrefillRef.current = true;
+
+    const prefillName = searchParams.get("name")?.trim();
+    if (prefillName) {
+      setName(prefillName.slice(0, 160));
+    }
+
+    const prefillUnit = searchParams.get("unit")?.trim().toLowerCase();
+    if (prefillUnit === "g" || prefillUnit === "ml" || prefillUnit === "package" || prefillUnit === "serving") {
+      setUnit(prefillUnit as ConsumptionUnit);
+    }
+
+    const prefillAmount = Number(searchParams.get("amount"));
+    if (Number.isFinite(prefillAmount) && prefillAmount > 0) {
+      setAmount(prefillAmount);
+    }
+
+    const prefillCalories = Number(searchParams.get("calories"));
+    if (Number.isFinite(prefillCalories) && prefillCalories > 0) {
+      setCalories(prefillCalories);
+    }
+  }, [searchParams]);
 
   const handleSubmit = useCallback(async () => {
     if (!validatedPantryTarget) return;
