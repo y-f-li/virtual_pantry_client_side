@@ -95,6 +95,10 @@ describe("Open Food Facts page", () => {
 
     render(<OpenFoodFactsPage />);
 
+    expect(screen.getByRole("button", { name: "Upload product image" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload receipt" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add manually" })).toBeInTheDocument();
+
     fireEvent.change(screen.getByLabelText("e.g. 3017624010701"), {
       target: { value: "90331701" },
     });
@@ -111,7 +115,7 @@ describe("Open Food Facts page", () => {
 
   it("searches by product name, loads top compact products, and selects one by product index", async () => {
     getMock.mockImplementation((url: string) => {
-      if (url === "/products/search?q=TIK%20UDON%20Noodles&limit=5") {
+      if (url === "/products/search?q=TIK%20UDON%20Noodles&limit=10") {
         return Promise.resolve({
           query: "TIK UDON Noodles",
           normalizedQuery: "tik udon noodles",
@@ -154,7 +158,7 @@ describe("Open Food Facts page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Search by name" }));
 
     await waitFor(() => {
-      expect(getMock).toHaveBeenCalledWith("/products/search?q=TIK%20UDON%20Noodles&limit=5");
+      expect(getMock).toHaveBeenCalledWith("/products/search?q=TIK%20UDON%20Noodles&limit=10");
       expect(getMock).toHaveBeenCalledWith("/products/index/3207438");
     });
 

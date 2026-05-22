@@ -34,6 +34,20 @@
   max-height: 240px;
 }
 
+.noImagePlaceholder {
+  width: 100%;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #cfd9c4;
+  border-radius: 14px;
+  color: #687568;
+  background: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
 .content {
   display: grid;
   gap: 22px;
@@ -246,10 +260,34 @@
 }
 
 .micronutrientSubtext {
+  display: block;
   color: #5d6a5d;
   font-size: 13px;
   line-height: 1.45;
   margin-top: 4px;
+}
+
+.micronutrientToggle {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.micronutrientToggle:disabled {
+  cursor: default;
+}
+
+.micronutrientToggle:focus-visible {
+  outline: 2px solid rgba(31, 122, 63, 0.25);
+  outline-offset: 4px;
+  border-radius: 10px;
 }
 
 .micronutrientCount {
@@ -262,6 +300,17 @@
   border: 1px solid #cde8c9;
   font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.nutritionUnavailable {
+  border: 1px dashed #d9e3d1;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 12px 14px;
+  color: #667566;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .micronutrientGrid {

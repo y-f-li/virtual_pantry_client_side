@@ -34,9 +34,16 @@ import { usePantryWebSocket } from "@/hooks/usePantryWebSocket";
 import { VirtualPantryAppShell } from "@/components/VirtualPantryAppShell";
 import type { HouseholdWithRole } from "@/types/household";
 import styles from "@/styles/openFoodFacts.module.css";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  CameraOutlined,
+  EditOutlined,
+  FileImageOutlined,
+} from "@ant-design/icons";
 
 const { Title, Paragraph } = Typography;
+
+const PRODUCT_CANDIDATE_LIMIT = 10;
 
 type PantryTarget = {
   householdId: number;
@@ -175,6 +182,7 @@ function OpenFoodFactsPortalContent() {
     Record<string, Product | null>
   >({});
   const nameResultsScrollRef = useRef<HTMLDivElement | null>(null);
+  const receiptResultsRef = useRef<HTMLDivElement | null>(null);
   const barcodeLookupRef = useRef<HTMLDivElement | null>(null);
   const nameLookupRef = useRef<HTMLDivElement | null>(null);
   const [lookupMessage, setLookupMessage] = useState("");
@@ -336,6 +344,19 @@ function OpenFoodFactsPortalContent() {
     router.push("/households");
   }, [router, searchParams]);
 
+  const buildPantryActionUrl = useCallback(
+    (path: string) => {
+      if (!pantryTarget) {
+        return path;
+      }
+
+      return `${path}?householdId=${pantryTarget.householdId}&householdName=${encodeURIComponent(
+        pantryTarget.householdName ?? `Household ${pantryTarget.householdId}`,
+      )}`;
+    },
+    [pantryTarget],
+  );
+
   const lookupBarcode = useCallback(
     async (barcodeValue: string) => {
       const barcodeToLookup = barcodeValue.trim();
@@ -375,11 +396,11 @@ function OpenFoodFactsPortalContent() {
     setNameSearchLoading(true);
     try {
       const result = await api.get<ProductSearchResponse>(
-        `/products/search?q=${encodeURIComponent(query)}&limit=5`,
+        `/products/search?q=${encodeURIComponent(query)}&limit=${PRODUCT_CANDIDATE_LIMIT}`,
       );
       setNameSearchResponse(result);
 
-      const candidates = (result.candidates ?? []).slice(0, 5);
+      const candidates = (result.candidates ?? []).slice(0, PRODUCT_CANDIDATE_LIMIT);
       const initialCards: NameProductCardState[] = candidates.map(
         (candidate) => ({
           candidate,
@@ -456,7 +477,7 @@ function OpenFoodFactsPortalContent() {
 
       for (let index = 0; index < receiptItems.length; index += 1) {
         const item = receiptItems[index];
-        const candidates = (item.productSearch?.candidates ?? []).slice(0, 5);
+        const candidates = (item.productSearch?.candidates ?? []).slice(0, PRODUCT_CANDIDATE_LIMIT);
         initialCards[getReceiptItemKey(item, index)] = candidates.map(
           (candidate) => ({
             candidate,
@@ -478,7 +499,7 @@ function OpenFoodFactsPortalContent() {
             const itemKey = getReceiptItemKey(item, index);
             const candidates = (item.productSearch?.candidates ?? []).slice(
               0,
-              5,
+              PRODUCT_CANDIDATE_LIMIT,
             );
             const loadedCards = await Promise.all(
               candidates.map(
@@ -580,6 +601,45 @@ function OpenFoodFactsPortalContent() {
     setReceiptSelectedProducts({});
   }, [clearReceiptUploadSession]);
 
+  useEffect(() => {
+    if (!hasReceiptResults) {
+      return undefined;
+    }
+
+    let retryTimeoutId: ReturnType<typeof window.setTimeout> | undefined;
+
+    const scrollToReceiptResults = () => {
+      const receiptResultsElement = receiptResultsRef.current;
+      if (!receiptResultsElement) {
+        return;
+      }
+
+      receiptResultsElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      const targetTop =
+        receiptResultsElement.getBoundingClientRect().top + window.scrollY - 24;
+      window.scrollTo({
+        top: Math.max(targetTop, 0),
+        behavior: "smooth",
+      });
+    };
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      scrollToReceiptResults();
+      retryTimeoutId = window.setTimeout(scrollToReceiptResults, 250);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      if (retryTimeoutId !== undefined) {
+        window.clearTimeout(retryTimeoutId);
+      }
+    };
+  }, [hasReceiptResults, receiptProductCards]);
+
   const scrollNameResults = useCallback((direction: "left" | "right") => {
     nameResultsScrollRef.current?.scrollBy({
       left: direction === "left" ? -520 : 520,
@@ -655,6 +715,37 @@ function OpenFoodFactsPortalContent() {
         </p>
       </Card>
 
+      <Card className={styles.actionCard}>
+        <div className={styles.actionCardHeader}>
+          <div>
+            <div className={styles.contextLabel}>Other add flows</div>
+            <div className={styles.actionTitle}>Continue with another input method</div>
+          </div>
+          <Space wrap>
+            <Button
+              icon={<CameraOutlined />}
+              onClick={() => router.push(buildPantryActionUrl("/pantry/add/scan"))}
+            >
+              Upload product image
+            </Button>
+            <Button
+              icon={<FileImageOutlined />}
+              onClick={() => router.push(buildPantryActionUrl("/pantry/add/receipt"))}
+              disabled={!pantryTarget}
+            >
+              Upload receipt
+            </Button>
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => router.push(buildPantryActionUrl("/pantry/add/manual"))}
+              disabled={!pantryTarget}
+            >
+              Add manually
+            </Button>
+          </Space>
+        </div>
+      </Card>
+
       <div ref={barcodeLookupRef}>
         <Card title="Barcode lookup" className={styles.sectionCard}>
           <Space orientation="vertical" size="large" style={{ width: "100%" }}>
@@ -681,19 +772,6 @@ function OpenFoodFactsPortalContent() {
               </label>
 
               <div className={styles.lookupActions}>
-                {/* Issue #114 — manual add entry point; only shown when browsing with a household context */}
-                {pantryTarget ? (
-                  <Button
-                    className={styles.secondaryBtn}
-                    onClick={() =>
-                      router.push(
-                        `/pantry/add/manual?householdId=${pantryTarget.householdId}&householdName=${encodeURIComponent(pantryTarget.householdName ?? "")}`,
-                      )
-                    }
-                  >
-                    Add manually
-                  </Button>
-                ) : null}
                 <Button
                   type="primary"
                   className={styles.primaryBtn}
@@ -784,7 +862,7 @@ function OpenFoodFactsPortalContent() {
               <Alert
                 type={getSearchNoticeType(nameSearchResponse)}
                 showIcon
-                message={nameSearchResponse?.message}
+                title={nameSearchResponse?.message}
               />
             ) : null}
 
@@ -891,16 +969,17 @@ function OpenFoodFactsPortalContent() {
       </div>
 
       {hasReceiptResults ? (
-        <Card
-          title="Receipt lookup results"
-          className={styles.sectionCard}
-          style={{ marginTop: 24 }}
-        >
-          <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+        <div ref={receiptResultsRef}>
+          <Card
+            title="Receipt lookup results"
+            className={styles.sectionCard}
+            style={{ marginTop: 24 }}
+          >
+            <Space orientation="vertical" size="large" style={{ width: "100%" }}>
             <Alert
               type="success"
               showIcon
-              message={`Receipt scanned: ${receiptUploadSession?.result.merchantName ?? "Unknown merchant"}`}
+              title={`Receipt scanned: ${receiptUploadSession?.result.merchantName ?? "Unknown merchant"}`}
               description={`${receiptItems.length} extracted receipt line${receiptItems.length === 1 ? "" : "s"}. Choose a product candidate, or jump back to barcode/name lookup if none of the candidates are right.`}
               action={
                 <Button onClick={clearReceiptResults}>
@@ -946,7 +1025,7 @@ function OpenFoodFactsPortalContent() {
                     <Alert
                       type={getSearchNoticeType(item.productSearch)}
                       showIcon
-                      message={item.productSearch?.message}
+                      title={item.productSearch?.message}
                       className={styles.receiptSearchNotice}
                     />
                   ) : null}
@@ -1053,8 +1132,9 @@ function OpenFoodFactsPortalContent() {
                 </div>
               );
             })}
-          </Space>
-        </Card>
+            </Space>
+          </Card>
+        </div>
       ) : null}
 
     </VirtualPantryAppShell>

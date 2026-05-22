@@ -10,7 +10,7 @@ import { VirtualPantryAppShell } from "@/components/VirtualPantryAppShell";
 import { isStaleHouseholdError, getStaleHouseholdMessage } from "@/utils/householdStale";
 import type { HouseholdWithRole } from "@/types/household";
 import type { ConsumptionUnit, ManualMicronutrientKey, MicronutrientUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
-import { App, Button, Card, DatePicker, Input, Space, Typography } from "antd";
+import { Alert, App, Button, Card, DatePicker, Input, Space, Typography } from "antd";
 import type { Dayjs } from "dayjs";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 
@@ -130,6 +130,7 @@ function ManualAddPantryItemContent() {
   const [calories, setCalories] = useState<number | "">("");
   const [micronutrients, setMicronutrients] = useState<ManualMicronutrientFormState>(() => createInitialMicronutrientState());
   const [expirationDate, setExpirationDate] = useState<Dayjs | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const requestedHouseholdId = useMemo(() => {
@@ -244,6 +245,17 @@ function ManualAddPantryItemContent() {
     }));
   }, []);
 
+  const clearForm = useCallback(() => {
+    setName("");
+    setBarcode("");
+    setUnit("package");
+    setAmount(1);
+    setCalories("");
+    setMicronutrients(createInitialMicronutrientState());
+    setExpirationDate(null);
+    setSuccessNotice(null);
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!validatedPantryTarget) return;
 
@@ -283,15 +295,9 @@ function ManualAddPantryItemContent() {
         `/households/${validatedPantryTarget.householdId}/pantry`,
         payload,
       );
-      message.success(`Item added to ${validatedPantryTarget.householdName}.`);
-      setName("");
-      setBarcode("");
-      setUnit("package");
-      setAmount(1);
-      setCalories("");
-      setMicronutrients(createInitialMicronutrientState());
-      setExpirationDate(null);
-      router.push(`/households/${validatedPantryTarget.householdId}/stats`);
+      const successText = `Item added to ${validatedPantryTarget.householdName}.`;
+      message.success(successText);
+      setSuccessNotice(successText);
     } catch (error) {
       if (isStaleHouseholdError(error)) {
         setHouseholds(cachedHouseholds.filter((h) => h.householdId !== validatedPantryTarget.householdId));
@@ -331,6 +337,15 @@ function ManualAddPantryItemContent() {
 
       <Card title="Product details">
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
+          {successNotice ? (
+            <Alert
+              type="success"
+              showIcon
+              title={successNotice}
+              description="The item stays in the pantry. Clear the fields when you want to enter another item."
+            />
+          ) : null}
+
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span>Product name *</span>
             <Input
@@ -453,6 +468,13 @@ function ManualAddPantryItemContent() {
               loading={isSubmitting}
             >
               {isSubmitting ? "Adding..." : "Add to pantry"}
+            </Button>
+            <Button
+              type="default"
+              onClick={clearForm}
+              disabled={isSubmitting}
+            >
+              Clear fields
             </Button>
           </Space>
         </Space>

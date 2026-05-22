@@ -59,10 +59,16 @@ jest.mock("antd", () => {
   const App = {
     useApp: () => ({ message: { error: errorMock, warning: warningMock, success: successMock } }),
   };
+  const Alert = ({ title, description }: any) => (
+    <div role="alert">
+      <div>{title}</div>
+      {description ? <div>{description}</div> : null}
+    </div>
+  );
   const DatePicker = ({ placeholder, onChange }: any) => (
     <input type="date" placeholder={placeholder} onChange={(e) => onChange?.(e.target.value ? { format: () => e.target.value } : null)} />
   );
-  return { App, Button, Card, DatePicker, Input, Space, Typography };
+  return { Alert, App, Button, Card, DatePicker, Input, Space, Typography };
 });
 
 describe("ManualAddPantryItemPage", () => {
@@ -150,7 +156,28 @@ describe("ManualAddPantryItemPage", () => {
       });
     });
     expect(successMock).toHaveBeenCalledWith("Item added to Test Home.");
-    expect(pushMock).toHaveBeenCalledWith("/households/7/stats");
+    expect(screen.getByRole("alert")).toHaveTextContent("Item added to Test Home.");
+    expect(pushMock).not.toHaveBeenCalledWith("/households/7/stats");
+  });
+
+  it("clears the manual add form when Clear fields is clicked", async () => {
+    postMock.mockResolvedValueOnce({ id: 1 });
+    render(<ManualAddPantryItemPage />);
+    await waitFor(() => expect(screen.getByLabelText("e.g. Whole Milk")).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText("e.g. Whole Milk"), { target: { value: "Milk" } });
+    fireEvent.change(screen.getByLabelText("e.g. 3017624010701"), { target: { value: "123" } });
+    fireEvent.change(screen.getByLabelText("Calories per package (kcal)"), { target: { value: "250" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add to pantry" }));
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Item added to Test Home."));
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear fields" }));
+
+    expect(screen.getByLabelText("e.g. Whole Milk")).toHaveValue("");
+    expect(screen.getByLabelText("e.g. 3017624010701")).toHaveValue("");
+    expect(screen.getByLabelText("Calories per package (kcal)")).toHaveValue(null);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
 

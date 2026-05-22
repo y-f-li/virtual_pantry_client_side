@@ -261,6 +261,7 @@ export default function ProductResultCard({
   const { value: households, set: setHouseholds } = useSessionStorage<HouseholdWithRole[]>("households", []);
   const { value: selectedHouseholdId, clear: clearSelectedHouseholdId } = useSessionStorage<number | null>("selectedHouseholdId", null);
   const reportedNutrients = useMemo(() => getReportedNutrients(product), [product]);
+  const [nutritionExpanded, setNutritionExpanded] = useState(false);
   const calorieBasisDisplay = useMemo(() => getProductCalorieBasisDisplay(product), [product]);
   const showPackageQuantityNote = useMemo(
     () => shouldShowProductPackageQuantityUnavailableNote(product),
@@ -297,6 +298,7 @@ export default function ProductResultCard({
     setManualKcalPerPackage(estimateKcalPerPackage(product)?.toString() ?? "");
     setManualPackageQuantity("");
     setManualPackageQuantityUnit(productPackageQuantityUnit ?? "g");
+    setNutritionExpanded(false);
   }, [availableUnits, product, productPackageQuantityUnit]);
 
   const manualPackageQuantityValue = Number(manualPackageQuantity);
@@ -417,11 +419,9 @@ export default function ProductResultCard({
 
   return (
     <Card className={styles.resultCard} styles={{ body: { padding: 24 } }}>
-      <div
-        className={`${styles.resultBody} ${product.imageUrl ? "" : styles.resultBodyNoImage}`.trim()}
-      >
-        {product.imageUrl ? (
-          <div className={styles.imagePanel}>
+      <div className={styles.resultBody}>
+        <div className={styles.imagePanel}>
+          {product.imageUrl ? (
             <Image
               src={product.imageUrl}
               alt={product.name ?? "Product image"}
@@ -429,8 +429,12 @@ export default function ProductResultCard({
               width={260}
               className={styles.image}
             />
-          </div>
-        ) : null}
+          ) : (
+            <div className={styles.noImagePlaceholder} aria-label="No product image available">
+              No image
+            </div>
+          )}
+        </div>
 
         <div className={styles.content}>
           <div className={styles.headerBlock}>
@@ -471,20 +475,36 @@ export default function ProductResultCard({
             </div>
           </div>
 
-          {reportedNutrients.length > 0 ? (
-            <section className={styles.micronutrientPanel} aria-label="Reported nutrition">
-              <div className={styles.micronutrientHeader}>
-                <div>
-                  <div className={styles.micronutrientTitle}>Reported nutrition</div>
-                  <div className={styles.micronutrientSubtext}>
-                    Values are shown when reported by the local dataset or the product data source.
-                  </div>
-                </div>
-                <span className={styles.micronutrientCount}>
-                  {reportedNutrients.length} reported
+          <section className={styles.micronutrientPanel} aria-label="Reported nutrition">
+            <button
+              type="button"
+              className={styles.micronutrientToggle}
+              onClick={() => {
+                if (reportedNutrients.length > 0) {
+                  setNutritionExpanded((current) => !current);
+                }
+              }}
+              aria-expanded={reportedNutrients.length > 0 ? nutritionExpanded : undefined}
+              disabled={reportedNutrients.length === 0}
+            >
+              <span>
+                <span className={styles.micronutrientTitle}>Reported nutrition</span>
+                <span className={styles.micronutrientSubtext}>
+                  Values are shown when reported by the local dataset or the product data source.
                 </span>
-              </div>
+              </span>
+              <span className={styles.micronutrientCount}>
+                {reportedNutrients.length > 0
+                  ? `${reportedNutrients.length} reported · ${nutritionExpanded ? "Hide details" : "Show details"}`
+                  : "Not available"}
+              </span>
+            </button>
 
+            {reportedNutrients.length === 0 ? (
+              <div className={styles.nutritionUnavailable}>
+                Nutrition information not available.
+              </div>
+            ) : nutritionExpanded ? (
               <div className={styles.micronutrientGrid}>
                 {reportedNutrients.map((nutrient) => (
                   <div key={`${nutrient.section}-${nutrient.displayName}-${nutrient.basis}`} className={styles.micronutrientCard}>
@@ -497,8 +517,8 @@ export default function ProductResultCard({
                   </div>
                 ))}
               </div>
-            </section>
-          ) : null}
+            ) : null}
+          </section>
 
           <div className={styles.actionPanel}>
             <div className={styles.actionHeading}>Add this item to pantry</div>
