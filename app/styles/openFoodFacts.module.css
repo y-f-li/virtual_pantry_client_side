@@ -48,6 +48,29 @@
   max-width: 700px;
 }
 
+.actionCard {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06) !important;
+  margin-bottom: 24px;
+}
+
+.actionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.actionTitle {
+  margin-top: 4px;
+  color: #1b2a1b;
+  font-size: 18px;
+  font-weight: 800;
+}
+
 .sectionCard {
   border-radius: 14px !important;
   border: 1px solid #e2e8d4 !important;

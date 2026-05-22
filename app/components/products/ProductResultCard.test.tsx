@@ -91,6 +91,52 @@ describe("ProductResultCard", () => {
     expect(screen.queryByText("Nutri-Score computation data")).not.toBeInTheDocument();
   });
 
+  it("keeps the image and nutrition sections visible when optional product data is missing", () => {
+    render(
+      <ProductResultCard
+        product={{ ...product, imageUrl: null, nutriments: null, nutrition: null }}
+        rawTitle="Raw fields"
+        exportContext="Pantry export"
+      />,
+    );
+
+    expect(screen.getByLabelText("No product image available")).toHaveTextContent("No image");
+    expect(screen.getByRole("region", { name: "Reported nutrition" })).toBeInTheDocument();
+    expect(screen.getByText("Nutrition information not available.")).toBeInTheDocument();
+  });
+
+  it("renders reported nutrition as a collapsed expandable section", () => {
+    render(
+      <ProductResultCard
+        product={{
+          ...product,
+          nutrition: {
+            basisAmount: 100,
+            basisUnit: "g",
+            coreNutrition: {
+              "energy-kcal": { value: 220, unit: "kcal" },
+              protein: { value: 12, unit: "g" },
+            },
+            micronutrients: {
+              iron: { value: 2.5, unit: "mg" },
+            },
+          },
+        }}
+        rawTitle="Raw fields"
+        exportContext="Pantry export"
+      />,
+    );
+
+    expect(screen.getByText(/3 reported · Show details/)).toBeInTheDocument();
+    expect(screen.queryByText("Protein")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Reported nutrition/i }));
+
+    expect(screen.getByText(/3 reported · Hide details/)).toBeInTheDocument();
+    expect(screen.getByText("Protein")).toBeInTheDocument();
+    expect(screen.getByText("Iron")).toBeInTheDocument();
+  });
+
   it("posts a pantry item successfully without redirecting when the pantry form is submitted", async () => {
     postMock.mockResolvedValueOnce({
       id: 7,
@@ -119,7 +165,6 @@ describe("ProductResultCard", () => {
 
     await waitFor(() => {
       expect(postMock).toHaveBeenCalledWith("/households/10/pantry", {
-        productIndex: null,
         barcode: "123456789",
         name: "Plant Based Caprese",
         amount: 2,
@@ -128,8 +173,6 @@ describe("ProductResultCard", () => {
         kcalPer100g: 220,
         kcalPer100ml: null,
         kcalPerServing: null,
-        packageQuantity: null,
-        packageQuantityUnit: null,
         expirationDate: null,
       });
     });
@@ -164,7 +207,6 @@ describe("ProductResultCard", () => {
 
     await waitFor(() => {
       expect(postMock).toHaveBeenCalledWith("/households/12/pantry", {
-        productIndex: null,
         barcode: "123456789",
         name: "Plant Based Caprese",
         amount: 180,
@@ -173,8 +215,6 @@ describe("ProductResultCard", () => {
         kcalPer100g: 220,
         kcalPer100ml: null,
         kcalPerServing: null,
-        packageQuantity: null,
-        packageQuantityUnit: null,
         expirationDate: null,
       });
     });
