@@ -64,7 +64,6 @@ import type { HealthGoal } from "@/types/healthGoal";
 import statsStyles from "@/styles/stats.module.css";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import type {
-  AmountUnit,
   ConsumptionUnit,
   ConsumePantryItemResponse,
   PantryItem,

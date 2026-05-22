@@ -9,7 +9,7 @@ import { usePantryWebSocket } from "@/hooks/usePantryWebSocket";
 import { VirtualPantryAppShell } from "@/components/VirtualPantryAppShell";
 import { isStaleHouseholdError, getStaleHouseholdMessage } from "@/utils/householdStale";
 import type { HouseholdWithRole } from "@/types/household";
-import type { AmountUnit, ManualMicronutrientKey, MicronutrientUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
+import type { ConsumptionUnit, ManualMicronutrientKey, MicronutrientUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
 import { App, Button, Card, DatePicker, Input, Space, Typography } from "antd";
 import type { Dayjs } from "dayjs";
 import { ArrowLeftOutlined } from "@ant-design/icons";
@@ -88,9 +88,10 @@ function buildManualMicronutrientPayload(
   return Object.keys(payload).length > 0 ? payload : undefined;
 }
 
-function getManualNutritionBasisLabel(unit: AmountUnit): string {
+function getManualNutritionBasisLabel(unit: ConsumptionUnit): string {
   if (unit === "g") return "per 100g";
   if (unit === "ml") return "per 100ml";
+  if (unit === "serving") return "per serving";
   return "per package";
 }
 
@@ -124,7 +125,7 @@ function ManualAddPantryItemContent() {
 
   const [name, setName] = useState("");
   const [barcode, setBarcode] = useState("");
-  const [unit, setUnit] = useState<AmountUnit>("package");
+  const [unit, setUnit] = useState<ConsumptionUnit>("package");
   const [amount, setAmount] = useState<number>(1);
   const [calories, setCalories] = useState<number | "">("");
   const [micronutrients, setMicronutrients] = useState<ManualMicronutrientFormState>(() => createInitialMicronutrientState());
@@ -217,6 +218,7 @@ function ManualAddPantryItemContent() {
   const caloriesLabel = useMemo(() => {
     if (unit === "g") return "Calories per 100g (kcal)";
     if (unit === "ml") return "Calories per 100ml (kcal)";
+    if (unit === "serving") return "Calories per serving (kcal)";
     return "Calories per package (kcal)";
   }, [unit]);
 
@@ -270,6 +272,7 @@ function ManualAddPantryItemContent() {
       kcalPerPackage: unit === "package" ? calories : null,
       kcalPer100g: unit === "g" ? calories : null,
       kcalPer100ml: unit === "ml" ? calories : null,
+      kcalPerServing: unit === "serving" ? calories : null,
       manualEntry: true,
       expirationDate: expirationDate ? expirationDate.format("YYYY-MM-DD") : null,
     };
@@ -353,12 +356,13 @@ function ManualAddPantryItemContent() {
             <span>Unit</span>
             <select
               value={unit}
-              onChange={(e) => setUnit(e.target.value as AmountUnit)}
+              onChange={(e) => setUnit(e.target.value as ConsumptionUnit)}
               aria-label="Unit"
             >
               <option value="package">package</option>
               <option value="g">g</option>
               <option value="ml">ml</option>
+              <option value="serving">serving</option>
             </select>
           </label>
 

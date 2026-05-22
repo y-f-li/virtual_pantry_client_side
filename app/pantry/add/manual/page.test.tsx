@@ -145,6 +145,7 @@ describe("ManualAddPantryItemPage", () => {
         kcalPerPackage: 250,
         kcalPer100g: null,
         kcalPer100ml: null,
+        kcalPerServing: null,
         manualEntry: true,
         expirationDate: null,
       });
@@ -195,6 +196,7 @@ describe("ManualAddPantryItemPage", () => {
         kcalPerPackage: null,
         kcalPer100g: 380,
         kcalPer100ml: null,
+        kcalPerServing: null,
         manualEntry: true,
         expirationDate: null,
       });

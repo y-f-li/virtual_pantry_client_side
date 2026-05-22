@@ -1,4 +1,4 @@
-import type { AmountUnit, ConsumptionUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
+import type { ConsumptionUnit, PantryItem, PantryItemCreateRequest } from "@/types/pantry";
 import type { LocalDatasetNutrientAmount, Product } from "@/types/product";
 
 type QuantityUnit = "kg" | "g" | "l" | "ml";
@@ -186,18 +186,13 @@ export function estimateKcalPerPackage(product: Product): number | null {
     }
   }
 
-  const servingValue = parseNumber(nutriments["energy-kcal_serving"]);
-  if (servingValue !== null) {
-    return Number(servingValue.toFixed(2));
-  }
-
   return null;
 }
 
 
 export type CalorieBasisDisplay = {
   value: number;
-  basis: "package" | "100g" | "100ml";
+  basis: "package" | "100g" | "100ml" | "serving";
   label: string;
 };
 
@@ -274,6 +269,11 @@ export function getPantryItemCalorieBasisDisplay(item: PantryItem): CalorieBasis
     return { value: per100ml, basis: "100ml", label: "kcal / 100ml" };
   }
 
+  const perServing = positiveDisplayNumber(item.kcalPerServing);
+  if (perServing !== null) {
+    return { value: perServing, basis: "serving", label: "kcal / serving" };
+  }
+
   return null;
 }
 
@@ -289,15 +289,13 @@ function isLocalDatasetProduct(product: Product): boolean {
   return product.dataSource === "local_dataset";
 }
 
-// Issue #114 — returns only units that have usable nutrition data for this product.
-// Local dataset add-to-pantry is package-first for now; g/ml can be restored when
-// the revamped consumption-unit flow is wired end to end.
-export function detectAvailableUnits(product: Product): AmountUnit[] {
+// returns only units that have usable nutrition data for this product; package is always included as fallback
+export function detectAvailableUnits(product: Product): ConsumptionUnit[] {
   if (isLocalDatasetProduct(product)) {
     return ["package"];
   }
 
-  const units: AmountUnit[] = ["package"];
+  const units: ConsumptionUnit[] = ["package"];
   const amountInfo = parsePackageAmount(product.quantity);
   const nutriments = product.nutriments ?? {};
 
@@ -307,14 +305,16 @@ export function detectAvailableUnits(product: Product): AmountUnit[] {
   if (amountInfo?.basis === "100ml" && parseNumber(nutriments["energy-kcal_100ml"]) !== null) {
     units.unshift("ml");
   }
+  if (getKcalPerServing(product) !== null) {
+    units.unshift("serving");
+  }
 
   return units;
 }
 
-// Issue #114 — default amount pre-filled when user selects a unit
-// package → 1; g/ml → the parsed package weight/volume so user doesn't have to type it
-export function getDefaultAmount(product: Product, unit: AmountUnit): number {
-  if (unit === "package") return 1;
+// package/serving → 1; g/ml → the parsed package weight/volume so user doesn't have to type it
+export function getDefaultAmount(product: Product, unit: ConsumptionUnit): number {
+  if (unit === "package" || unit === "serving") return 1;
   const amountInfo = packageAmountFromLocalDataset(product);
   return amountInfo?.amount ?? 1;
 }
@@ -338,11 +338,10 @@ export function getKcalPerServing(product: Product): number | null {
   return fromNutriments !== null && fromNutriments > 0 ? Number(fromNutriments.toFixed(2)) : null;
 }
 
-// Issue #114 — build payload with amount, amountUnit, and the relevant kcal field for the chosen unit
 export function buildPantryItemPayload(
   product: Product,
   amount: number,
-  unit: AmountUnit,
+  unit: ConsumptionUnit,
 ): PantryItemCreateRequest {
   return {
     barcode: (product.barcode ?? "").trim(),

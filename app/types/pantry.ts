@@ -60,7 +60,7 @@ export interface PantryItem {
   name: string;
   amount: number;
   initialAmount?: number;
-  amountUnit: AmountUnit;
+  amountUnit: ConsumptionUnit;
   kcalPerPackage?: number | null;
   kcalPer100g?: number | null;
   kcalPer100ml?: number | null;

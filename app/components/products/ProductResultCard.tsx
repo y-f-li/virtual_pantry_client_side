@@ -4,7 +4,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import useSessionStorage from "@/hooks/useSessionStorage";
-import type { AmountUnit, PantryItem } from "@/types/pantry";
+import type { ConsumptionUnit, PantryItem } from "@/types/pantry";
 import type { Product } from "@/types/product";
 import type { HouseholdWithRole } from "@/types/household";
 import {
@@ -272,9 +272,8 @@ export default function ProductResultCard({
 
   // Issue #114 — unit selector: detect which units are available from product data
   const availableUnits = useMemo(() => detectAvailableUnits(product), [product]);
-  // Issue #114 — runtime guard: only pass valid AmountUnit values from the select
-  const VALID_UNITS: AmountUnit[] = availableUnits;
-  const [selectedUnit, setSelectedUnit] = useState<AmountUnit>(() => availableUnits[0]);
+  const VALID_UNITS: ConsumptionUnit[] = availableUnits;
+  const [selectedUnit, setSelectedUnit] = useState<ConsumptionUnit>(() => availableUnits[0]);
   const [amount, setAmount] = useState<number>(() => getDefaultAmount(product, availableUnits[0]));
   const [manualKcalPerPackage, setManualKcalPerPackage] = useState<string>(
     () => estimateKcalPerPackage(product)?.toString() ?? "",
@@ -284,7 +283,7 @@ export default function ProductResultCard({
 
   // Issue #114 — switching unit resets amount to the sensible default for that unit
   // Issue #114 — useCallback prevents unnecessary re-renders if parent memoizes ProductResultCard
-  const handleUnitChange = useCallback((unit: AmountUnit) => {
+  const handleUnitChange = useCallback((unit: ConsumptionUnit) => {
     setSelectedUnit(unit);
     setAmount(getDefaultAmount(product, unit));
     if (unit === "package") {
@@ -467,7 +466,7 @@ export default function ProductResultCard({
                     onChange={(e) => {
                       const v = e.target.value;
                       if ((VALID_UNITS as string[]).includes(v)) {
-                        handleUnitChange(v as AmountUnit);
+                        handleUnitChange(v as ConsumptionUnit);
                       }
                     }}
                     aria-label="Unit"
@@ -488,7 +487,7 @@ export default function ProductResultCard({
                   aria-label={`Amount in ${selectedUnit}`}
                   type="number"
                   min={0.01}
-                  step={selectedUnit === "package" ? 1 : 0.1}
+                  step={selectedUnit === "package" || selectedUnit === "serving" ? 1 : 0.1}
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
                   className={styles.quantityInput}

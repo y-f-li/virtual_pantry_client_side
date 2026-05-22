@@ -11,6 +11,8 @@ jest.mock("@/components/VirtualPantryAppShell", () => ({
 
 const getMock = jest.fn();
 const pushMock = jest.fn();
+const messageMock = { error: jest.fn(), warning: jest.fn(), success: jest.fn() };
+const mockApi = { get: getMock };
 
 jest.mock("@/components/products/ProductResultCard", () => (props: any) => (
   <div data-testid={`product-card-${props.exportContext}`}>
@@ -48,7 +50,7 @@ jest.mock("antd", () => {
   };
 
   const App = {
-    useApp: () => ({ message: { error: jest.fn(), warning: jest.fn(), success: jest.fn() } }),
+    useApp: () => ({ message: messageMock }),
   };
 
   return { App, Button, Card, Empty, Image, Input, Space, Typography };
@@ -64,7 +66,20 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/hooks/useApi", () => ({
-  useApi: () => ({ get: getMock }),
+  useApi: () => mockApi,
+}));
+
+jest.mock("@/hooks/usePantryWebSocket", () => ({
+  usePantryWebSocket: () => ({ connected: false, hasConnectedOnce: false }),
+}));
+
+jest.mock("@/hooks/useSessionStorage", () => ({
+  __esModule: true,
+  default: (key: string) => {
+    if (key === "households") return { value: [], set: jest.fn(), clear: jest.fn() };
+    if (key === "receiptUploadSession") return { value: null, set: jest.fn(), clear: jest.fn() };
+    return { value: "", set: jest.fn(), clear: jest.fn() };
+  },
 }));
 
 describe("Open Food Facts page", () => {

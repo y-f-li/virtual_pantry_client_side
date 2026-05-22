@@ -15,7 +15,7 @@ import type {
   ProductSearchCandidate,
   ProductSearchResponse,
 } from "@/types/product";
-import type { ReceiptMatchedItem, ReceiptUploadSession } from "@/types/receipt";
+import type { ReceiptLineItem, ReceiptMatchedItem, ReceiptUploadSession } from "@/types/receipt";
 import ProductResultCard from "@/components/products/ProductResultCard";
 import {
   Alert,
@@ -230,7 +230,7 @@ function OpenFoodFactsPortalContent() {
       return [];
     }
 
-    return receiptUploadSession.result.items.filter(isReceiptMatchedItem);
+    return (receiptUploadSession.result.items as (ReceiptLineItem | ReceiptMatchedItem)[]).filter(isReceiptMatchedItem);
   }, [pantryTarget, receiptUploadSession]);
 
   const hasReceiptResults = receiptItems.length > 0;
