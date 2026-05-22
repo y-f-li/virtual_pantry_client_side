@@ -95,6 +95,9 @@ describe("pantry helpers", () => {
       kcalPer100g: null,
       kcalPer100ml: null,
       kcalPerServing: null,
+      packageQuantity: null,
+      packageQuantityUnit: null,
+      productIndex: null,
     });
   });
 

@@ -174,6 +174,9 @@ describe("ProductResultCard", () => {
         kcalPer100ml: null,
         kcalPerServing: null,
         expirationDate: null,
+        packageQuantity: null,
+        packageQuantityUnit: null,
+        productIndex: null,
       });
     });
 
@@ -216,6 +219,9 @@ describe("ProductResultCard", () => {
         kcalPer100ml: null,
         kcalPerServing: null,
         expirationDate: null,
+        packageQuantity: null,
+        packageQuantityUnit: null,
+        productIndex: null,
       });
     });
 
