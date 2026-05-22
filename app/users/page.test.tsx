@@ -76,6 +76,9 @@ jest.mock("@/hooks/useSessionStorage", () => ({
         clear: jest.fn(),
       };
     }
+    if (key === "userId") {
+      return { value: "5", set: jest.fn(), clear: jest.fn() };
+    }
     return { value: "", set: jest.fn(), clear: jest.fn() };
   },
 }));
@@ -192,6 +195,19 @@ describe("Users page", () => {
     expect(pushMock).toHaveBeenCalledWith(
       expect.stringContaining("/open-food-facts?householdId=10"),
     );
+  });
+
+
+  it("navigates to the current user nutrition reference", async () => {
+    routeApi({});
+    render(<UsersPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Nutrition Reference/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Nutrition Reference/i }));
+    expect(pushMock).toHaveBeenCalledWith("/users/5/details/nutrition-reference");
   });
 
   it("shows fallback state when no households exist", async () => {

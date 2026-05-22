@@ -150,7 +150,7 @@ describe("PantryScanPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Pantry/i }));
 
     expect(pushMock).toHaveBeenCalledWith(
-      "/households/7?name=Test%20Household",
+      "/households/7/stats",
     );
   });
 

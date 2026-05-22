@@ -35,7 +35,7 @@ export function VirtualPantryAppShell({ activeNav, children }: VirtualPantryAppS
 
   const handleSidebarPantry = () => {
     if (households.length === 0) {
-      message.info("Create or join a household first, then open Pantry.");
+      message.info("Create or join a pantry first, then open Pantry.");
       return;
     }
     const id =
@@ -43,16 +43,13 @@ export function VirtualPantryAppShell({ activeNav, children }: VirtualPantryAppS
       households.some((h) => h.householdId === selectedHouseholdId)
         ? selectedHouseholdId
         : households[0].householdId;
-    const household = households.find((h) => h.householdId === id);
     setSelectedHouseholdId(id);
-    router.push(
-      `/households/${id}?name=${encodeURIComponent(household?.name ?? `Household ${id}`)}`,
-    );
+    router.push(`/households/${id}/stats`);
   };
 
   const handleSidebarRecipes = () => {
     if (households.length === 0) {
-      message.info("Create or join a household first, then open Recipes.");
+      message.info("Create or join a pantry first, then open Recipes.");
       return;
     }
     const id =
@@ -61,7 +58,7 @@ export function VirtualPantryAppShell({ activeNav, children }: VirtualPantryAppS
         ? selectedHouseholdId
         : households[0].householdId;
     const household = households.find((h) => h.householdId === id);
-    const fallbackName = `Household ${id}`;
+    const fallbackName = `Pantry ${id}`;
     const recipeHouseholdName = household?.name ?? fallbackName;
     setSelectedHouseholdId(id);
     router.push(
@@ -123,7 +120,7 @@ export function VirtualPantryAppShell({ activeNav, children }: VirtualPantryAppS
             </button>
             <button type="button" className={navBtn("households")} onClick={() => router.push("/households")}>
               <HomeOutlined className={styles.menuIcon} />
-              <span className={styles.menuText}>Households</span>
+              <span className={styles.menuText}>Manage</span>
             </button>
             <button type="button" className={navBtn("pantry")} onClick={handleSidebarPantry}>
               <InboxOutlined className={styles.menuIcon} />

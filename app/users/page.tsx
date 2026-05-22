@@ -80,6 +80,7 @@ const DashboardPage: React.FC = () => {
   const api = useApi();
   const { message } = App.useApp();
   const { value: households } = useSessionStorage<HouseholdWithRole[]>("households", []);
+  const { value: userId } = useSessionStorage<string>("userId", "");
   const {
     value: selectedHouseholdId,
     set: setSelectedHouseholdId,
@@ -257,13 +258,21 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push(`/open-food-facts?householdId=${activeHousehold.householdId}&householdName=${encodeURIComponent(activeHousehold.name)}`)}
-        >
-          Add Product
-        </Button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <Button
+            onClick={() => router.push(`/users/${userId}/details/nutrition-reference`)}
+            disabled={!userId}
+          >
+            Nutrition Reference
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push(`/open-food-facts?householdId=${activeHousehold.householdId}&householdName=${encodeURIComponent(activeHousehold.name)}`)}
+          >
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -326,7 +335,7 @@ const DashboardPage: React.FC = () => {
                     icon={<AppstoreOutlined />}
                     onClick={() =>
                       router.push(
-                        `/households/${activeHousehold.householdId}?name=${encodeURIComponent(activeHousehold.name)}`,
+                        `/households/${activeHousehold.householdId}/stats`,
                       )
                     }
                   >
@@ -372,7 +381,7 @@ const DashboardPage: React.FC = () => {
                     icon={<HistoryOutlined />}
                     onClick={() =>
                       router.push(
-                        `/households/${activeHousehold.householdId}/stats?name=${encodeURIComponent(activeHousehold.name)}`,
+                        `/households/${activeHousehold.householdId}/stats`,
                       )
                     }
                   >

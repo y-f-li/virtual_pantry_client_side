@@ -195,7 +195,7 @@ describe("ReceiptReviewPage", () => {
     });
 
     expect(clearSessionMock).toHaveBeenCalled();
-    expect(pushMock).toHaveBeenCalledWith("/households/7?name=Test%20Household");
+    expect(pushMock).toHaveBeenCalledWith("/households/7/stats");
   });
 
   it("prompts users to upload again when the review session is missing", async () => {

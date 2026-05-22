@@ -229,7 +229,7 @@ function ReceiptReviewPageInner() {
       await api.post(`/households/${session.householdId}/pantry/bulk-add`, { items });
       clearSession();
       message.success(`${items.length} receipt item${items.length === 1 ? "" : "s"} added to pantry.`);
-      router.push(`/households/${session.householdId}?name=${encodeURIComponent(session.householdName ?? `Household ${session.householdId}`)}`);
+      router.push(`/households/${session.householdId}/stats`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Could not add selected receipt items to pantry.");
     } finally {
