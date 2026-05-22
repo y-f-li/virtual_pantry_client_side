@@ -2,6 +2,8 @@
 
 ## Introduction
 
+Virtual Pantry is a collaborative calorie and nutrition tracking app for households. Users can add products by barcode, name, or receipt scan to a shared pantry, then log consumption from existing items. This avoids repeatedly searching for the same food and helps households track products that are bought, stored, and consumed by different people.
+
 ## Technologies Used
 
 - **Next.js 15** and **React 19** for the web interface, routing, and
@@ -32,7 +34,8 @@ Make sure you have the following installed:
 
 - [Node.js 22+](https://nodejs.org/) and npm
 - [Java 17+](https://adoptium.net/)
-- An [OpenAI API key](https://platform.openai.com/api-keys) (required for receipt scanning and meal recognition)
+- An [OpenAI API key](https://platform.openai.com/api-keys) (required for meal food recognition)
+- An Azure Document Intelligence endpoint and API key (required for receipt scanning): set `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` and `AZURE_DOCUMENT_INTELLIGENCE_API_KEY`
 
 ### Installing
 
@@ -90,7 +93,7 @@ Every push to `main` triggers the GitHub Actions workflows automatically:
 - **Frontend** is deployed to [Vercel](https://vercel.com).
 - **Backend** is deployed to [Google App Engine](https://cloud.google.com/appengine).
 
-**One-time setup** (one team member per repo):
+**One-time setup**:
 
 Frontend — add the following [repository secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) to the client repo:
 - `VERCEL_TOKEN`
