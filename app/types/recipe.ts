@@ -17,6 +17,7 @@ export interface RecipeRecommendation {
   title: string;
   summary: string;
   imageEmoji: string;
+  source?: "LOCAL_CATALOG" | "DYNAMIC_PANTRY" | string;
   servings: number;
   readyToCook: boolean;
   matchScore: number;

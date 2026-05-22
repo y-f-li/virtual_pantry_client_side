@@ -49,6 +49,15 @@ function displayRecipeToken(token: string): string {
     .toUpperCase() || "RP";
 }
 
+function recipeSourceLabel(source?: string): string {
+  if (source === "DYNAMIC_PANTRY") return "Pantry generated";
+  return "Local recipe";
+}
+
+function recipeSourceClass(source?: string): string {
+  return source === "DYNAMIC_PANTRY" ? styles.sourceDynamic : styles.sourceLocal;
+}
+
 function ingredientStatus(ingredient: RecipeIngredient): "success" | "warning" | "error" {
   if (ingredient.matched && ingredient.enoughAvailable) return "success";
   if (ingredient.matched) return "warning";
@@ -272,6 +281,9 @@ function RecipesPageContent() {
                   <Tag color={recipe.readyToCook ? "green" : "gold"}>
                     {recipe.readyToCook ? "Ready to cook" : `${recipe.missingIngredientCount} missing`}
                   </Tag>
+                  <Tag className={recipeSourceClass(recipe.source)}>
+                    {recipeSourceLabel(recipe.source)}
+                  </Tag>
                   <Title level={4} className={styles.recipeTitle}>
                     {recipe.title}
                   </Title>
@@ -349,6 +361,9 @@ function RecipesPageContent() {
       >
         {selectedRecipe ? (
           <>
+            <Tag className={recipeSourceClass(selectedRecipe.source)}>
+              {recipeSourceLabel(selectedRecipe.source)}
+            </Tag>
             <Paragraph>{selectedRecipe.recommendationReason}</Paragraph>
             {recipeModalMode === "cook" && !selectedRecipe.readyToCook ? (
               <Alert

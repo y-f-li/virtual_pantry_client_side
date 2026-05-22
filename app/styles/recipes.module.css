@@ -110,6 +110,20 @@
   color: #192719 !important;
 }
 
+.sourceLocal {
+  border-color: #b9d8a5 !important;
+  background: #edf7e7 !important;
+  color: #245b2f !important;
+  font-weight: 700;
+}
+
+.sourceDynamic {
+  border-color: #d6c48b !important;
+  background: #fff7d8 !important;
+  color: #715619 !important;
+  font-weight: 700;
+}
+
 .summary {
   color: #5d695c !important;
   min-height: 44px;
