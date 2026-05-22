@@ -12,6 +12,8 @@ Virtual Pantry is a collaborative calorie and nutrition tracking app for househo
 - **Ant Design** for UI components such as forms, tables, cards, modals,
   upload controls, tags, alerts, and layout elements.
 - **Recharts** for household nutrition and statistics visualizations.
+- **SockJS** and **STOMP** for WebSocket-based real-time pantry updates from
+  the backend.
 - **Session Storage / Local Storage** for authenticated session data and
   temporary client-side workflow state, such as receipt review sessions.
 - **Fetch-based API service layer** for communicating with the Spring Boot
