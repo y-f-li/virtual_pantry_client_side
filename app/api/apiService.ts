@@ -1,6 +1,5 @@
 import { getApiDomain } from "@/utils/domain";
 import { ApplicationError } from "@/types/error";
-import { getActiveToken } from "@/utils/authStorage";
 
 export class ApiService {
   private baseURL: string;
@@ -9,109 +8,123 @@ export class ApiService {
     this.baseURL = getApiDomain();
   }
 
-  private buildHeaders(options?: { hasBody?: boolean }): HeadersInit {
-    const headers: Record<string, string> = {
-      Accept: "application/json",
-    };
-
-    if (options?.hasBody) {
-      headers["Content-Type"] = "application/json";
-    }
-
+  private getHeaders(includeJsonContentType = true): HeadersInit {
+    let token: string | null = null;
     if (typeof window !== "undefined") {
-      const token = getActiveToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+      try {
+        token = JSON.parse(sessionStorage.getItem("token") ?? "null") as string | null;
+      } catch {
+        token = null;
       }
     }
 
+    const headers: Record<string, string> = {};
+    if (includeJsonContentType) {
+      headers["Content-Type"] = "application/json";
+    }
+    if (token) {
+      headers["Authorization"] = token;
+    }
     return headers;
   }
 
-  private async processResponse<T>(res: Response, errorMessage: string): Promise<T> {
+  private async processResponse<T>(
+    res: Response,
+    errorMessage: string,
+  ): Promise<T> {
     if (!res.ok) {
       let errorDetail = res.statusText;
-
       try {
         const errorInfo = await res.json();
-        if (errorInfo?.reason) errorDetail = errorInfo.reason;
-        else if (errorInfo?.message) errorDetail = errorInfo.message;
-        else errorDetail = JSON.stringify(errorInfo);
+        if (errorInfo?.message) {
+          errorDetail = errorInfo.message;
+        } else if (errorInfo?.detail) {
+          errorDetail = errorInfo.detail;
+        } else if (errorInfo?.title) {
+          errorDetail = errorInfo.title;
+        } else {
+          errorDetail = JSON.stringify(errorInfo);
+        }
       } catch {
-        // keep statusText fallback
+        // keep statusText
       }
 
-      const error: ApplicationError = new Error(
-        `${errorMessage} (${res.status}: ${errorDetail})`,
-      ) as ApplicationError;
-
-      error.status = res.status;
+      const detailedMessage = `${errorMessage} (${res.status}: ${errorDetail})`;
+      const error: ApplicationError = new Error(detailedMessage) as ApplicationError;
       error.info = JSON.stringify(
         { status: res.status, statusText: res.statusText },
         null,
         2,
       );
-
+      error.status = res.status;
       throw error;
     }
 
-    if (res.status === 204 || res.status === 205) {
-      return undefined as T;
-    }
-
-    const contentType = res.headers.get("Content-Type") ?? "";
-    if (contentType.includes("application/json")) {
-      return (await res.json()) as T;
-    }
-
-    return undefined as T;
+    return res.headers.get("Content-Type")?.includes("application/json")
+      ? (res.json() as Promise<T>)
+      : Promise.resolve(res as T);
   }
 
   public async get<T>(endpoint: string): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "GET",
-      headers: this.buildHeaders({ hasBody: false }),
+      headers: this.getHeaders(),
     });
-    return this.processResponse<T>(res, "An error occurred while fetching the data.");
+    return this.processResponse<T>(
+      res,
+      "An error occurred while fetching the data.\n",
+    );
   }
 
   public async post<T>(endpoint: string, data: unknown): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "POST",
-      headers: this.buildHeaders({ hasBody: true }),
+      headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
-    return this.processResponse<T>(res, "An error occurred while posting the data.");
+    return this.processResponse<T>(
+      res,
+      "An error occurred while posting the data.\n",
+    );
+  }
+
+  public async postFormData<T>(endpoint: string, data: FormData): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: this.getHeaders(false),
+      body: data,
+    });
+    return this.processResponse<T>(
+      res,
+      "An error occurred while uploading the form data.\n",
+    );
   }
 
   public async put<T>(endpoint: string, data: unknown): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "PUT",
-      headers: this.buildHeaders({ hasBody: true }),
+      headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
-    return this.processResponse<T>(res, "An error occurred while updating the data.");
-  }
-
-  public async patch<T>(endpoint: string, data?: unknown): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    const res = await fetch(url, {
-      method: "PATCH",
-      headers: this.buildHeaders({ hasBody: data !== undefined }),
-      body: data === undefined ? undefined : JSON.stringify(data),
-    });
-    return this.processResponse<T>(res, "An error occurred while patching the data.");
+    return this.processResponse<T>(
+      res,
+      "An error occurred while updating the data.\n",
+    );
   }
 
   public async delete<T>(endpoint: string): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "DELETE",
-      headers: this.buildHeaders({ hasBody: false }),
+      headers: this.getHeaders(),
     });
-    return this.processResponse<T>(res, "An error occurred while deleting the data.");
+    return this.processResponse<T>(
+      res,
+      "An error occurred while deleting the data.\n",
+    );
   }
 }

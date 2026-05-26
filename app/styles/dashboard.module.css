@@ -1,0 +1,389 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0 !important;
+  color: #1b2a1b !important;
+}
+
+.subtitle {
+  margin: 4px 0 8px !important;
+  color: #687467 !important;
+}
+
+.headerMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #4d5a4c;
+  font-size: 13px;
+}
+
+.headerMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #4d5a4c;
+}
+
+.householdName {
+  color: #263726;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1.25fr);
+  gap: 20px;
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alertCard {
+  border-radius: 14px !important;
+  border: 1px solid #f1cfcf !important;
+  background: #fce7e7 !important;
+}
+
+.alertLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #7b1d22;
+}
+
+.alertTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alertIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(173, 40, 48, 0.15);
+  color: #ad2830;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.alertContent {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #7b1d22;
+  margin-top: 10px;
+}
+
+.alertValue {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.alertUnit {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.alertFootnote {
+  margin-top: 6px;
+  color: #9a2c32;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.kpiCard,
+.kpiCardGreen,
+.kpiCardOutline {
+  border-radius: 14px !important;
+  min-height: 150px;
+}
+
+.kpiCard {
+  border: 1px solid #e5ebda !important;
+  background: #f5f7f1 !important;
+}
+
+.kpiCardOutline {
+  border: 1px solid #e7e4d8 !important;
+  background: #fbf8ef !important;
+}
+
+.kpiCardGreen {
+  border: 1px solid #d8ebd3 !important;
+  background: #dff3d8 !important;
+}
+
+.kpiLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #415341;
+}
+
+.kpiValue {
+  margin-top: 10px;
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 700;
+  color: #172517;
+}
+
+.kpiTitle {
+  margin-top: 10px;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #1c3d1f;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.kpiSub {
+  margin-top: 6px;
+  color: #4e644f;
+  font-size: 13px;
+}
+
+.sectionTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.inventoryCard {
+  border-radius: 14px !important;
+}
+
+.inventoryTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.inventoryHead,
+.inventoryRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.inventoryHead {
+  padding: 10px 0;
+  border-bottom: 1px solid #edf2e7;
+  color: #667465;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.inventoryRow {
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5ec;
+  color: #243224;
+}
+
+.productCell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categoryPill {
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e2f0dd;
+  color: #2f6d31;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusDanger {
+  color: #ad2830;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.statusOk {
+  color: #2e7d32;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.activityCard,
+.tipCard,
+.emptyCard {
+  border-radius: 14px !important;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activityItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.activityAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  color: #132713;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.activityBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.activityText {
+  color: #1a2a1a;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.activityActor {
+  color: #0f2a10;
+  font-weight: 700;
+}
+
+.activityVerb {
+  color: #5e6d5e;
+}
+
+.activityAmount {
+  color: #0f2a10;
+  font-weight: 700;
+}
+
+.activityProduct {
+  color: #1a2a1a;
+  font-weight: 600;
+}
+
+.activityRemoved {
+  color: #8a7b5a;
+  font-style: italic;
+}
+
+.activityTime {
+  color: #7f8d7f;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.avatarTone1 {
+  background: linear-gradient(140deg, #f2d7c5, #efb3ae);
+}
+
+.avatarTone2 {
+  background: linear-gradient(140deg, #d7e4f4, #b8c8e6);
+}
+
+.avatarTone3 {
+  background: linear-gradient(140deg, #f5e9bf, #efd598);
+}
+
+.avatarTone4 {
+  background: linear-gradient(140deg, #d2ead4, #a8d4ab);
+}
+
+.avatarToneMuted {
+  background: #e2e2e0;
+  color: #6b6b66;
+}
+
+.tipCard {
+  background: #111 !important;
+  color: #f8f8f8 !important;
+}
+
+.tipLabel {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #c8cec8;
+  margin-bottom: 8px;
+}
+
+.tipText {
+  font-size: 19px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #f8f8f8;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpiRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kpiRow {
+    grid-template-columns: 1fr;
+  }
+
+  .inventoryHead,
+  .inventoryRow {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  }
+
+  .tipText {
+    font-size: 17px;
+  }
+}

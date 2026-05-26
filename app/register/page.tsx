@@ -1,105 +1,159 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Form, Input, Space, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
-import type { ApplicationError } from "@/types/error";
-import type { User } from "@/types/user";
-import { clearGuestSession, storeUserSession } from "@/utils/authStorage";
+import useSessionStorage from "@/hooks/useSessionStorage";
+import type { HouseholdWithRole } from "@/types/household";
+import AuthLayout from "@/components/auth/AuthLayout";
+import { getRegisterErrorMessage } from "@/utils/authError";
+import { User } from "@/types/user";
+import { App, Button, Checkbox, Form, Input } from "antd";
+import styles from "@/styles/auth.module.css";
 
-const { Title, Text, Paragraph } = Typography;
-
-function extractReasonFromMessage(msg: string): string {
-  const match = msg.match(/\(\d+:\s*(.*)\)$/);
-  return match?.[1] ?? msg;
+interface RegisterFormValues {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptedTerms: boolean;
 }
 
-export default function RegisterPage() {
+const Register: React.FC = () => {
   const router = useRouter();
-  const api = useApi();
+  const { message } = App.useApp();
+  const apiService = useApi();
 
-  const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [form] = Form.useForm();
-
-  const onFinish = async (values: { username: string; password: string }) => {
+  useEffect(() => {
     try {
-      setLoading(true);
-      setServerError(null);
+      const token = JSON.parse(sessionStorage.getItem("token") ?? "null") as string | null;
+      if (token) router.replace("/households");
+    } catch {
+      // malformed token, stay on register
+    }
+  }, [router]);
+  const [form] = Form.useForm<RegisterFormValues>();
+  const { set: setToken } = useSessionStorage<string>("token", "");
+  const { set: setUsername } = useSessionStorage<string>("username", "");
+  const { set: setUserId } = useSessionStorage<string>("userId", "");
+  const { set: setHouseholds } = useSessionStorage<HouseholdWithRole[]>("households", []);
 
-      const created = await api.post<User>("/users", {
-        username: values.username,
+  const handleRegister = async (values: RegisterFormValues): Promise<void> => {
+    try {
+      const response = await apiService.post<User>("/users/register", {
+        username: values.username.trim(),
         password: values.password,
-        bio: "",
       });
 
-      clearGuestSession();
-      if (created?.token) storeUserSession(created.token, created.id);
-      router.push("/pantry");
-    } catch (e: unknown) {
-      const err = e as Partial<ApplicationError>;
-      const rawMsg = err.message ?? "Registration failed";
-      const cleanMsg = extractReasonFromMessage(rawMsg);
-      setServerError(cleanMsg);
-      message.error(cleanMsg);
-      form.setFieldsValue({ password: "" });
-    } finally {
-      setLoading(false);
+      if (response.token) {
+        setToken(response.token);
+      }
+      if (response.id) {
+        setUserId(String(response.id));
+      }
+      setUsername(response.username?.trim() || values.username.trim());
+
+      try {
+        const households = await apiService.get<HouseholdWithRole[]>("/households");
+        setHouseholds(households);
+      } catch {
+        setHouseholds([]);
+      }
+
+      router.push("/households");
+    } catch (error) {
+      message.error(getRegisterErrorMessage(error));
     }
   };
 
   return (
-    <div className="app-page">
-      <div className="app-shell narrow">
-        <Card className="shell-card">
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <div>
-              <Text className="page-kicker">Create a persistent account</Text>
-              <Title level={2} className="page-heading">
-                Register
-              </Title>
-              <Paragraph className="page-subtitle">
-                Set up an account and head straight into the pantry. Guest sessions are temporary,
-                but registered accounts keep your pantry state around.
-              </Paragraph>
-            </div>
-
-            <Form form={form} layout="vertical" onFinish={onFinish} className="form-stack">
-              <Form.Item
-                label="Username"
-                name="username"
-                validateStatus={serverError ? "error" : ""}
-                help={serverError ?? ""}
-                rules={[{ required: true, message: "Please enter a username" }]}
-              >
-                <Input placeholder="Choose a username" />
-              </Form.Item>
-
-              <Form.Item
-                label="Password"
-                name="password"
-                rules={[{ required: true, message: "Please enter a password" }]}
-              >
-                <Input.Password placeholder="Choose a password" />
-              </Form.Item>
-
-              <Button type="primary" htmlType="submit" loading={loading} block>
-                Create account
-              </Button>
-
-              <Button type="default" onClick={() => router.push("/login")} block>
-                Already registered? Go to login
-              </Button>
-              <Button onClick={() => router.push("/")} block>
-                Back home
-              </Button>
-            </Form>
-
-            <Text type="secondary">Everything stays on the same light visual language as the pantry pages.</Text>
-          </Space>
-        </Card>
-      </div>
-    </div>
+    <AuthLayout
+      title="Create Account"
+      subtitle="Join our community of mindful curators."
+      switchPrompt="Already have an account?"
+      switchActionLabel="Sign in"
+      onSwitchAction={() => router.push("/login")}
+    >
+      <Form<RegisterFormValues>
+        form={form}
+        name="register"
+        size="large"
+        variant="outlined"
+        onFinish={handleRegister}
+        layout="vertical"
+        autoComplete="off"
+      >
+        <Form.Item
+          name="username"
+          label="Username"
+          rules={[{ required: true, message: "Please input your username." }]}
+        >
+          <Input placeholder="Your name" />
+        </Form.Item>
+        <Form.Item
+          name="email"
+          label="Email Address"
+          rules={[
+            { required: true, message: "Please input your email." },
+            { type: "email", message: "Please enter a valid email address." },
+          ]}
+        >
+          <Input placeholder="your.email@example.com" />
+        </Form.Item>
+        <Form.Item
+          name="password"
+          label="Password"
+          rules={[
+            { required: true, message: "Please input your password." },
+            { min: 6, message: "Password must have at least 6 characters." },
+          ]}
+        >
+          <Input.Password placeholder="••••••••" />
+        </Form.Item>
+        <Form.Item
+          name="confirmPassword"
+          label="Confirm Password"
+          dependencies={["password"]}
+          rules={[
+            { required: true, message: "Please confirm your password." },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("password") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Passwords do not match."));
+              },
+            }),
+          ]}
+        >
+          <Input.Password placeholder="••••••••" />
+        </Form.Item>
+        <Form.Item
+          name="acceptedTerms"
+          valuePropName="checked"
+          rules={[
+            {
+              validator: (_, value) =>
+                value
+                  ? Promise.resolve()
+                  : Promise.reject(new Error("Please agree to the terms to continue.")),
+            },
+          ]}
+        >
+          <Checkbox className={styles.inlineAgreement}>
+            <span className={styles.requiredSign}>*</span> I agree to the{" "}
+            <a href="#terms">Terms of Service</a> and{" "}
+            <a href="#privacy">Privacy Policy</a>.
+          </Checkbox>
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" className={styles.submitButton}>
+            Create Account
+          </Button>
+        </Form.Item>
+      </Form>
+    </AuthLayout>
   );
-}
+};
+
+export default Register;

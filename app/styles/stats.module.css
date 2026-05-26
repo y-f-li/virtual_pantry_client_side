@@ -1,0 +1,217 @@
+.pageHeader {
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  margin: 0 0 8px !important;
+  font-size: 42px !important;
+  font-weight: 700 !important;
+  color: #1b2a1b !important;
+  line-height: 1.05 !important;
+}
+
+.pageSubtitle {
+  margin: 0 !important;
+  color: #5d6a5d !important;
+  font-size: 15px !important;
+  max-width: 640px;
+}
+
+.metricGrid {
+  margin-bottom: 28px;
+}
+
+.metricCard {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06) !important;
+  min-height: 220px;
+  height: 100%;
+}
+
+.metricCard :global(.ant-card-head) {
+  border-bottom: 1px solid #eef2e8 !important;
+  min-height: 52px;
+}
+
+.metricCard :global(.ant-card-head-title) {
+  padding: 12px 0 !important;
+}
+
+.cardTitle {
+  color: #14532d;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.metricLead {
+  color: #5d6a5d;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.metricValue {
+  margin: 0 0 8px !important;
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  color: #1b5e20 !important;
+  line-height: 1.15 !important;
+}
+
+.metricFootnote {
+  font-size: 12px;
+  color: #7a8878;
+}
+
+.lowerSection {
+  margin-bottom: 28px;
+}
+
+.panelCard {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06) !important;
+  height: 100%;
+}
+
+.panelCard :global(.ant-card-head-title) {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #1b2a1b !important;
+}
+
+.panelCard :global(.ant-table-thead > tr > th) {
+  background: #f6faf3 !important;
+  color: #3d4f3d !important;
+  font-weight: 600;
+  border-bottom: 1px solid #e5ebe0 !important;
+}
+
+.panelCard :global(.ant-table-tbody > tr > td) {
+  border-bottom: 1px solid #f0f4eb !important;
+}
+
+.categoryTag {
+  text-transform: uppercase;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+}
+
+.rightStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.recordConsumptionBtn {
+  width: 100%;
+  min-height: 52px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  background: #1b5e20 !important;
+  border-color: #1b5e20 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.recordConsumptionBtn:hover {
+  background: #14532d !important;
+  border-color: #14532d !important;
+}
+
+.activityCard :global(.ant-card-body) {
+  padding-top: 12px !important;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e8efe4;
+  background: #fbfcf8;
+}
+
+.activityMeta {
+  font-size: 12px;
+  color: #8a948a;
+  margin-top: 4px;
+}
+
+.activityDelta {
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.deltaNeg {
+  color: #c62828;
+}
+
+.breakdownCard {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06) !important;
+}
+
+.breakdownCard :global(.ant-card-head-title) {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #1b2a1b !important;
+}
+
+.breakdownCard :global(.ant-table) {
+  color: #2d3b2d;
+}
+
+.breakdownCard :global(.ant-table-thead > tr > th) {
+  background: #f6faf3 !important;
+  color: #3d4f3d !important;
+  font-weight: 600;
+  border-bottom: 1px solid #e5ebe0 !important;
+}
+
+.breakdownCard :global(.ant-table-tbody > tr > td) {
+  border-bottom: 1px solid #f0f4eb !important;
+}
+
+.emptyWrap {
+  padding: 48px 24px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1px dashed #cfd9c4;
+  background: #fafdf7;
+  color: #5d6a5d;
+}
+
+.spinCard {
+  border-radius: 14px !important;
+  text-align: center;
+  padding: 48px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: #ffffff !important;
+}
+
+.deltaPos {
+  color: #1b5e20;
+}

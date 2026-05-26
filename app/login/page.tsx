@@ -1,118 +1,121 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Form, Input, Space, Typography, message } from "antd";
 import { useApi } from "@/hooks/useApi";
-import type { GuestSession } from "@/types/guest";
-import type { User } from "@/types/user";
-import type { ApplicationError } from "@/types/error";
-import { clearGuestSession, storeGuestSession, storeUserSession } from "@/utils/authStorage";
+import useSessionStorage from "@/hooks/useSessionStorage";
+import AuthLayout from "@/components/auth/AuthLayout";
+import { getLoginErrorMessage } from "@/utils/authError";
+import { User } from "@/types/user";
+import type { HouseholdWithRole } from "@/types/household";
+import { App, Button, Form, Input } from "antd";
+import styles from "@/styles/auth.module.css";
 
-const { Title, Text, Paragraph } = Typography;
-
-function extractReasonFromMessage(msg: string): string {
-  const match = msg.match(/\(\d+:\s*(.*)\)$/);
-  return match?.[1] ?? msg;
+interface LoginFormValues {
+  username: string;
+  password: string;
 }
 
-export default function LoginPage() {
+const Login: React.FC = () => {
   const router = useRouter();
-  const api = useApi();
-  const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
+  const { message } = App.useApp();
+  const apiService = useApi();
+  const [form] = Form.useForm<LoginFormValues>();
+  const { set: setToken, clear: clearToken } = useSessionStorage<string>("token", "");
+  const { set: setUsername, clear: clearUsername } = useSessionStorage<string>("username", "");
+  const { set: setUserId, clear: clearUserId } = useSessionStorage<string>("userId", "");
+  const { set: setHouseholds } = useSessionStorage<HouseholdWithRole[]>("households", []);
 
-
-  const enterGuestMode = async () => {
+  useEffect(() => {
+    let token: string | null = null;
     try {
-      setLoading(true);
-      clearGuestSession();
-      const session = await api.post<GuestSession>("/guest-session", {});
-      storeGuestSession(session.token, session.username);
-      message.success("Demo account ready. Nothing from this session will be kept.");
-      router.push("/pantry");
+      token = JSON.parse(sessionStorage.getItem("token") ?? "null") as string | null;
     } catch {
-      message.error("Could not start the guest demo session.");
-    } finally {
-      setLoading(false);
+      // malformed token
     }
-  };
+    if (!token) return;
 
+    apiService.get("/users/me")
+      .then(() => router.replace("/households"))
+      .catch((error: unknown) => {
+        if ((error as { status?: number })?.status === 401) {
+          clearToken();
+          clearUsername();
+          clearUserId();
+        }
+      });
+  }, [apiService, router, clearToken, clearUsername, clearUserId]);
 
-  const onFinish = async (values: { username: string; password: string }) => {
+  const handleLogin = async (values: LoginFormValues): Promise<void> => {
     try {
-      setLoading(true);
-
-      const response = await api.post<User>("/login", {
-        username: values.username,
+      const response = await apiService.post<User>("/users/login", {
+        username: values.username.trim(),
         password: values.password,
       });
 
-      clearGuestSession();
-      if (response?.token) storeUserSession(response.token, response.id);
-      router.push("/pantry");
-    } catch (e: unknown) {
-      const err = e as Partial<ApplicationError>;
-      const rawMsg = err.message ?? "Login failed";
-      const cleanMsg = extractReasonFromMessage(rawMsg);
-      message.error(cleanMsg);
-      form.setFieldsValue({ password: "" });
-    } finally {
-      setLoading(false);
+      if (response.token) {
+        setToken(response.token);
+      }
+      if (response.id) {
+        setUserId(String(response.id));
+      }
+      setUsername(response.username?.trim() || values.username.trim());
+
+      try {
+        const households = await apiService.get<HouseholdWithRole[]>("/households");
+        setHouseholds(households);
+      } catch {
+        setHouseholds([]);
+      }
+
+      router.push("/households");
+    } catch (error) {
+      message.error(getLoginErrorMessage(error));
     }
   };
 
   return (
-    <div className="app-page">
-      <div className="app-shell narrow">
-        <Card className="shell-card">
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <div>
-              <Text className="page-kicker">Account access</Text>
-              <Title level={2} className="page-heading">
-                Login
-              </Title>
-              <Paragraph className="page-subtitle">
-                Sign in to use the persistent pantry experience. Guest demo mode is also available here if you just want a quick look around.
-              </Paragraph>
-            </div>
-
-            <Form form={form} layout="vertical" onFinish={onFinish} className="form-stack">
-              <Form.Item
-                name="username"
-                label="Username"
-                rules={[{ required: true, message: "Please enter your username" }]}
-              >
-                <Input placeholder="Enter username" />
-              </Form.Item>
-
-              <Form.Item
-                name="password"
-                label="Password"
-                rules={[{ required: true, message: "Please enter your password" }]}
-              >
-                <Input.Password placeholder="Enter password" />
-              </Form.Item>
-
-              <Button type="primary" htmlType="submit" loading={loading} block>
-                Login
-              </Button>
-
-              <Button type="default" onClick={() => router.push("/register")} block>
-                No account? Register
-              </Button>
-              <Button type="primary" onClick={enterGuestMode} loading={loading} block>
-                Continue in demo mode
-              </Button>
-              <Button onClick={() => router.push("/")} block>
-                Back home
-              </Button>
-            </Form>
-
-            <Text type="secondary">Use the same deployed backend endpoints, just with a lighter UI.</Text>
-          </Space>
-        </Card>
-      </div>
-    </div>
+    <AuthLayout
+      title="Welcome Back"
+      subtitle="Sign in to continue to your pantry."
+      switchPrompt="Don't have an account?"
+      switchActionLabel="Create account"
+      onSwitchAction={() => router.push("/register")}
+    >
+      <Form<LoginFormValues>
+        form={form}
+        name="login"
+        size="large"
+        variant="outlined"
+        onFinish={handleLogin}
+        layout="vertical"
+        autoComplete="off"
+      >
+        <Form.Item
+          name="username"
+          label="Username"
+          rules={[{ required: true, message: "Please input your username." }]}
+        >
+          <Input placeholder="Your username" />
+        </Form.Item>
+        <Form.Item
+          name="password"
+          label="Password"
+          rules={[{ required: true, message: "Please input your password." }]}
+        >
+          <Input.Password placeholder="••••••••" />
+        </Form.Item>
+        {/* <Form.Item name="rememberMe" valuePropName="checked">
+          <Checkbox className={styles.inlineAgreement}>Remember me</Checkbox>
+        </Form.Item> */}
+        <Form.Item>
+          <Button type="primary" htmlType="submit" className={styles.submitButton}>
+            Sign In
+          </Button>
+        </Form.Item>
+      </Form>
+    </AuthLayout>
   );
-}
+};
+
+export default Login;

@@ -1,0 +1,333 @@
+.layout {
+  color-scheme: light;
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  min-height: 100vh;
+  background: #f8faef;
+  color: #1f2c1f;
+}
+
+.sidebar {
+  border-right: 1px solid #e3e9d8;
+  padding: 28px 16px 20px;
+  background: #f7f9ef;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.brandTagline {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7a8878;
+  margin-bottom: 20px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.menuItem {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  color: #6f7770;
+  font-weight: 600;
+  min-height: 48px;
+  text-align: left;
+  border-radius: 10px;
+  padding: 0 8px 0 14px;
+  cursor: pointer;
+  position: relative;
+  font-size: 17px;
+}
+
+.menuItemActive {
+  color: #187a35;
+}
+
+.menuItemActive::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 7px;
+  bottom: 7px;
+  width: 5px;
+  border-radius: 999px;
+  background: #2a8f46;
+}
+
+.menuIcon {
+  font-size: 24px;
+}
+
+.menuText {
+  font-size: 17px;
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.logoutButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  color: #6f7770;
+  font-weight: 600;
+  min-height: 44px;
+  border-radius: 10px;
+  padding: 0 8px 0 14px;
+  cursor: pointer;
+  font-size: 17px;
+}
+
+.main {
+  padding: 24px 46px 42px;
+  background: #fcfdf6;
+}
+
+.topUserBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.userName {
+  font-size: 42px;
+  font-weight: 700;
+  color: #172617;
+  line-height: 1;
+}
+
+.userAvatar {
+  background: #f4c9aa !important;
+  color: #2f2f2f !important;
+  font-weight: 700;
+  border-radius: 16px !important;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 700;
+  color: #1b2a1b;
+  line-height: 1.05;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: #687467;
+  font-size: 14px;
+}
+
+.stats {
+  margin-bottom: 34px;
+}
+
+.statCard {
+  border-radius: 10px;
+  border: 1px solid #e2e7d4;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(12, 40, 18, 0.04);
+  min-height: 122px;
+}
+
+.statLabel {
+  color: #5d6a5d;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.statValue {
+  margin-top: 6px;
+  color: #18491f;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+.section {
+  margin-bottom: 34px;
+}
+
+.sectionTitle {
+  margin-bottom: 16px !important;
+  border-bottom: 1px solid #e8efdf;
+  padding-bottom: 8px;
+  font-size: 34px !important;
+  line-height: 1.05 !important;
+}
+
+.householdCard {
+  border-radius: 12px;
+  border: 1px solid #dce4d0;
+  background: #ffffff;
+  min-height: 236px;
+}
+
+.householdTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roleTag {
+  margin-bottom: 10px;
+}
+
+.householdMeta {
+  color: #607060;
+  font-size: 14px;
+  margin: 4px 0 12px;
+}
+
+.cardButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.timeHint {
+  font-size: 12px;
+  color: #8a948a;
+}
+
+.joinCard {
+  border-radius: 12px;
+  border: 1px solid #dfe8d3;
+  background: #ffffff;
+}
+
+.joinHeading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #182818;
+}
+
+.joinDescription {
+  color: #5a675a;
+  font-size: 14px;
+  margin: 0;
+}
+
+.joinRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.joinInfoBox {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d6e4cd;
+  background: #f3f8ec;
+  color: #4f6a4f;
+  font-size: 13px;
+}
+
+.joinHint {
+  margin-top: 10px;
+  color: #5f6f5e;
+  font-size: 13px;
+}
+
+.inviteBox {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cde0c8;
+  background: #eef9ea;
+  color: #1c5624;
+  font-weight: 600;
+}
+
+.outlineButton {
+  border-color: #217c3f !important;
+  color: #217c3f !important;
+  font-weight: 600;
+}
+
+.main :global(.ant-card-body) {
+  padding: 18px !important;
+}
+
+.main :global(.ant-btn-primary) {
+  min-height: 40px;
+  border-radius: 10px;
+  font-weight: 600;
+  background: #257f41 !important;
+  border-color: #257f41 !important;
+}
+
+.main :global(.ant-btn-default) {
+  border-radius: 10px;
+}
+
+.main :global(.ant-input) {
+  min-height: 40px;
+  border-radius: 10px;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid #e4e7d8;
+  }
+
+  .main {
+    padding: 24px;
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .sectionTitle {
+    font-size: 30px !important;
+  }
+
+  .userName {
+    font-size: 28px;
+  }
+
+  .joinRow {
+    grid-template-columns: 1fr;
+  }
+}

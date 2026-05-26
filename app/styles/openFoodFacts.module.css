@@ -1,0 +1,469 @@
+.pageHeader {
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  margin: 0 0 8px !important;
+  font-size: 42px !important;
+  font-weight: 700 !important;
+  color: #1b2a1b !important;
+  line-height: 1.05 !important;
+}
+
+.pageSubtitle {
+  margin: 0 !important;
+  color: #5d6a5d !important;
+  font-size: 15px !important;
+  max-width: 720px;
+}
+
+.contextCard {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: linear-gradient(180deg, #fbfcf7 0%, #f3f6ec 100%) !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06) !important;
+  margin-bottom: 24px;
+}
+
+.contextLabel {
+  color: #14532d;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.contextValue {
+  margin-top: 4px;
+  color: #1b2a1b;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.contextNote {
+  margin: 8px 0 0;
+  color: #5d6a5d;
+  font-size: 14px;
+  max-width: 700px;
+}
+
+.actionCard {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06) !important;
+  margin-bottom: 24px;
+}
+
+.actionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.actionTitle {
+  margin-top: 4px;
+  color: #1b2a1b;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sectionCard {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8d4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06) !important;
+}
+
+.sectionCard :global(.ant-card-head) {
+  border-bottom: 1px solid #eef2e8 !important;
+}
+
+.sectionCard :global(.ant-card-head-title) {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #1b2a1b !important;
+}
+
+.sectionIntro {
+  margin: 0;
+  color: #5d6a5d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.lookupResultPanel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #c7d8b8;
+  background: linear-gradient(180deg, #fbfff7 0%, #f4f8ee 100%);
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.08);
+}
+
+.lookupResultLabel {
+  color: #14532d;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lookupStack {
+  display: grid;
+  gap: 16px;
+}
+
+.lookupLabel {
+  display: grid;
+  gap: 8px;
+  color: #334533;
+  font-weight: 600;
+}
+
+.lookupActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.secondaryBtn {
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+
+.primaryBtn {
+  min-height: 48px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  padding-inline: 20px !important;
+}
+
+.inlineError {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #a8071a;
+  font-size: 15px;
+}
+
+.emptyState {
+  padding: 40px 24px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1px dashed #cfd9c4;
+  background: #fafdf7;
+}
+
+.resultSection {
+  margin-top: 24px;
+}
+
+.fallbackNotice {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  color: #7a4a00;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nameSearchResultBox {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8d4;
+  background: #fbfcf7;
+}
+
+.nameSearchMessage {
+  color: #1b2a1b;
+  font-weight: 700;
+}
+
+.nameSearchMeta {
+  color: #5d6a5d;
+  font-size: 13px;
+}
+
+.nameSearchEmpty {
+  padding: 18px 16px;
+  border-radius: 12px;
+  border: 1px dashed #cfd9c4;
+  background: #ffffff;
+  color: #5d6a5d;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.candidateList {
+  display: grid;
+  gap: 10px;
+}
+
+.candidateButton {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d5dfca;
+  background: #ffffff;
+  color: #1b2a1b;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.candidateButton:hover {
+  border-color: #7da35f;
+  box-shadow: 0 4px 12px rgba(24, 60, 28, 0.1);
+  transform: translateY(-1px);
+}
+
+.candidateButton:disabled {
+  cursor: progress;
+  opacity: 0.72;
+  transform: none;
+}
+
+.candidateButton:disabled:hover {
+  border-color: #d5dfca;
+  box-shadow: none;
+  transform: none;
+}
+
+.candidateName {
+  font-weight: 700;
+}
+
+.candidateDetails {
+  color: #5d6a5d;
+  font-size: 13px;
+}
+
+.nameSelectedResult {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #c7d8b8;
+  background: linear-gradient(180deg, #fbfff7 0%, #f4f8ee 100%);
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.08);
+}
+
+.nameSelectedLabel {
+  color: #14532d;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nameCarouselShell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.nameCarouselNav {
+  align-self: center;
+  width: 38px !important;
+  height: 58px !important;
+  border-radius: 999px !important;
+  border: 1px solid #d5dfca !important;
+  background: #ffffff !important;
+  color: #1b2a1b !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(24, 60, 28, 0.08) !important;
+}
+
+.nameProductTrack {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 2px 2px 12px;
+  scrollbar-width: thin;
+}
+
+.nameProductCard {
+  flex: 0 0 168px;
+  display: grid;
+  grid-template-rows: 128px auto auto auto;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #d5dfca;
+  background: #ffffff;
+  color: #1b2a1b;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.nameProductCard:hover {
+  border-color: #7da35f;
+  box-shadow: 0 8px 18px rgba(24, 60, 28, 0.12);
+  transform: translateY(-2px);
+}
+
+.nameProductCardDisabled,
+.nameProductCardDisabled:hover {
+  cursor: default;
+  opacity: 0.78;
+  border-color: #d5dfca;
+  box-shadow: none;
+  transform: none;
+}
+
+.nameProductImageFrame {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 128px;
+  border-radius: 12px;
+  background: #f4f7ef;
+  overflow: hidden;
+}
+
+.nameProductImage {
+  width: 100%;
+  height: 128px;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.nameProductPlaceholder,
+.nameProductError {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 128px;
+  padding: 12px;
+  color: #5d6a5d;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.nameProductError {
+  color: #a8071a;
+  background: #fff2f0;
+}
+
+.nameProductName,
+.nameProductDetail,
+.nameProductBarcode {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nameProductName {
+  color: #1b2a1b;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.nameProductDetail,
+.nameProductBarcode {
+  color: #5d6a5d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .nameCarouselShell {
+    grid-template-columns: 1fr;
+  }
+
+  .nameCarouselNav {
+    display: none !important;
+  }
+
+  .nameProductCard {
+    flex-basis: 152px;
+  }
+}
+
+.receiptLineBlock {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #d8e2cd;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbf3 100%);
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06);
+}
+
+.receiptLineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.receiptLineEyebrow {
+  color: #14532d;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.receiptLineTitle {
+  margin: 4px 0 0;
+  color: #1b2a1b;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.receiptLineMeta {
+  margin-top: 6px;
+  color: #5d6a5d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.receiptProductTrack {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 2px 2px 12px;
+  scrollbar-width: thin;
+}
+
+.receiptSelectedResult {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #b7d2a2;
+  background: linear-gradient(180deg, #fbfff7 0%, #f0f7e8 100%);
+}
+
+.receiptManualActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.receiptSearchNotice {
+  margin-top: 2px;
+}
