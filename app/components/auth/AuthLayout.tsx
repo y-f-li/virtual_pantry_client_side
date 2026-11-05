@@ -29,7 +29,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
     <>
       <div className={styles.authPage}>
         <section className={styles.leftPanel}>
-          <p className={styles.brand}>The Better Cronometer</p>
+          <p className={styles.brand}></p>
           <h1 className={styles.heroTitle}>
             Simplify Your <span className={styles.heroTitleAccent}>Nutrition Tracking</span>{" "}
             Workflow
