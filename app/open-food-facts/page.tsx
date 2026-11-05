@@ -729,20 +729,6 @@ function OpenFoodFactsPortalContent() {
               Scan package barcode
             </Button>
             <Button
-              icon={<CameraOutlined />}
-              onClick={() => router.push(buildPantryActionUrl("/pantry/add/recognize"))}
-              disabled={!pantryTarget}
-            >
-              Recognize food from photo
-            </Button>
-            <Button
-              icon={<FileImageOutlined />}
-              onClick={() => router.push(buildPantryActionUrl("/pantry/add/receipt"))}
-              disabled={!pantryTarget}
-            >
-              Upload receipt
-            </Button>
-            <Button
               icon={<EditOutlined />}
               onClick={() => router.push(buildPantryActionUrl("/pantry/add/manual"))}
               disabled={!pantryTarget}

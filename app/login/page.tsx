@@ -11,7 +11,7 @@ import type { HouseholdWithRole } from "@/types/household";
 import { App, Button, Form, Input } from "antd";
 import styles from "@/styles/auth.module.css";
 import ConnectingOverlay from "../components/ConnectingOverlay";
-import { useStartGuestSession } from "@/utils/startGuestSession";
+import TryDemoButton from "@/components/auth/TryDemoButton";
 
 interface LoginFormValues {
   username: string;
@@ -28,7 +28,6 @@ const Login: React.FC = () => {
   const { set: setUsername, clear: clearUsername } = useSessionStorage<string>("username", "");
   const { set: setUserId, clear: clearUserId } = useSessionStorage<string>("userId", "");
   const { set: setHouseholds } = useSessionStorage<HouseholdWithRole[]>("households", []);
-  const startGuestSession = useStartGuestSession();
 
   useEffect(() => {
     let token: string | null = null;
@@ -92,13 +91,7 @@ const Login: React.FC = () => {
       bottomContent={
         <p className={styles.switchRow}> 
           Want to explore without signing in?{" "}
-          <Button
-            type="link"
-            className={styles.switchLink}
-            onClick={startGuestSession}
-            >
-            Try Demo
-          </Button>
+          <TryDemoButton type="link" className={styles.switchLink} />
         </p>
       }
     >

@@ -13,7 +13,7 @@ import { User } from "@/types/user";
 import { App, Button, Checkbox, Form, Input } from "antd";
 import styles from "@/styles/auth.module.css";
 import ConnectingOverlay from "../components/ConnectingOverlay";
-import { useStartGuestSession } from "@/utils/startGuestSession";
+import TryDemoButton from "@/components/auth/TryDemoButton";
 
 interface RegisterFormValues {
   username: string;
@@ -28,7 +28,6 @@ const Register: React.FC = () => {
   const [ connecting, setConnecting ] = useState(false);
   const { message } = App.useApp();
   const apiService = useApi();
-  const startGuestSession = useStartGuestSession();
 
   useEffect(() => {
     try {
@@ -97,13 +96,7 @@ const Register: React.FC = () => {
           <p className={styles.authSubtitle}>
             Explore without signing up
           </p>
-          <Button
-            type="primary"
-            className={styles.submitButton}
-            onClick={startGuestSession}
-          >
-            Try Demo
-          </Button>
+          <TryDemoButton type="link" className={styles.switchLink} />
         </div>
       }
     >
