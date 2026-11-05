@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; 
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import useSessionStorage from "@/hooks/useSessionStorage";
@@ -10,6 +10,8 @@ import { User } from "@/types/user";
 import type { HouseholdWithRole } from "@/types/household";
 import { App, Button, Form, Input } from "antd";
 import styles from "@/styles/auth.module.css";
+import ConnectingOverlay from "../components/ConnectingOverlay";
+import { useStartGuestSession } from "@/utils/startGuestSession";
 
 interface LoginFormValues {
   username: string;
@@ -18,6 +20,7 @@ interface LoginFormValues {
 
 const Login: React.FC = () => {
   const router = useRouter();
+  const [connecting, setConnecting] = useState(false);
   const { message } = App.useApp();
   const apiService = useApi();
   const [form] = Form.useForm<LoginFormValues>();
@@ -25,6 +28,7 @@ const Login: React.FC = () => {
   const { set: setUsername, clear: clearUsername } = useSessionStorage<string>("username", "");
   const { set: setUserId, clear: clearUserId } = useSessionStorage<string>("userId", "");
   const { set: setHouseholds } = useSessionStorage<HouseholdWithRole[]>("households", []);
+  const startGuestSession = useStartGuestSession();
 
   useEffect(() => {
     let token: string | null = null;
@@ -47,6 +51,9 @@ const Login: React.FC = () => {
   }, [apiService, router, clearToken, clearUsername, clearUserId]);
 
   const handleLogin = async (values: LoginFormValues): Promise<void> => {
+    
+    setConnecting(true);
+    
     try {
       const response = await apiService.post<User>("/users/login", {
         username: values.username.trim(),
@@ -70,6 +77,7 @@ const Login: React.FC = () => {
 
       router.push("/households");
     } catch (error) {
+      setConnecting(false);
       message.error(getLoginErrorMessage(error));
     }
   };
@@ -77,11 +85,26 @@ const Login: React.FC = () => {
   return (
     <AuthLayout
       title="Welcome Back"
-      subtitle="Sign in to continue to your pantry."
+      subtitle="Sign in to continue."
       switchPrompt="Don't have an account?"
       switchActionLabel="Create account"
       onSwitchAction={() => router.push("/register")}
+      bottomContent={
+        <p className={styles.switchRow}> 
+          Want to explore without signing in?{" "}
+          <Button
+            type="link"
+            className={styles.switchLink}
+            onClick={startGuestSession}
+            >
+            Try Demo
+          </Button>
+        </p>
+      }
     >
+
+      {connecting && <ConnectingOverlay />}
+
       <Form<LoginFormValues>
         form={form}
         name="login"

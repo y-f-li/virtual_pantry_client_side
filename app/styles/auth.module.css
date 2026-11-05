@@ -71,6 +71,8 @@
   background: #ffffff;
   padding: 56px clamp(24px, 6vw, 72px);
   display: flex;
+  flex-direction: column;
+  gap: 50px;
   align-items: center;
   justify-content: center;
 }

@@ -1,5 +1,5 @@
 "use client";
-
+import { FOOD_CATALOG_LABEL } from "@/config/foodCatalog";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   App,
@@ -70,6 +70,7 @@ import type {
   PantryOverview,
   PortionEstimateResponse,
 } from "@/types/pantry";
+import { AIConsumptionSection } from "@/components/pantry/AIConsumption/AIConsumptionSection";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -246,10 +247,6 @@ type PortionConsumeState = {
   item: PantryItem;
   amount: number;
   amountUnit: ConsumptionUnit;
-  mealPhoto: File | null;
-  estimateMessage: string | null;
-  estimatedRange: string | null;
-  isEstimating: boolean;
 };
 
 const CALORIE_SUGGESTIONS: Array<{ keywords: string[]; kcal: number }> = [
@@ -693,82 +690,6 @@ export default function StatsPage() {
     [api, householdId, loadDashboard, message],
   );
 
-  const estimatePortionFromPhoto = useCallback(async () => {
-    if (!portionConsumeState?.mealPhoto) {
-      message.error("Please select a meal photo first.");
-      return;
-    }
-
-    const { item, mealPhoto } = portionConsumeState;
-
-    setPortionConsumeState((current) =>
-      current ? { ...current, isEstimating: true, estimateMessage: null, estimatedRange: null } : current,
-    );
-
-    try {
-      const formData = new FormData();
-      formData.append("image", mealPhoto);
-
-      const estimate = await api.postFormData<PortionEstimateResponse>(
-        `/households/${householdId}/pantry/${item.id}/consume/portion-estimate`,
-        formData,
-      );
-
-      const availableUnits = getAvailableConsumptionUnits(item);
-      const suggestedUnit = isConsumptionUnit(estimate.unit) && availableUnits.includes(estimate.unit)
-        ? estimate.unit
-        : portionConsumeState.amountUnit;
-      const suggestedAmount =
-        typeof estimate.suggestedMinAmount === "number" && Number.isFinite(estimate.suggestedMinAmount)
-          ? estimate.suggestedMinAmount
-          : null;
-      const maxAmount = getMaxConsumptionAmount(item, suggestedUnit);
-      const estimatedRange =
-        estimate.estimatedRange ??
-        (
-          typeof estimate.suggestedMinAmount === "number" &&
-          typeof estimate.suggestedMaxAmount === "number" &&
-          Number.isFinite(estimate.suggestedMinAmount) &&
-          Number.isFinite(estimate.suggestedMaxAmount)
-            ? `${formatAmountDisplay(estimate.suggestedMinAmount)}–${formatAmountDisplay(estimate.suggestedMaxAmount)} ${suggestedUnit}`
-            : null
-        );
-
-      setPortionConsumeState((current) =>
-        current
-          ? {
-              ...current,
-              amountUnit: suggestedUnit,
-              amount:
-                suggestedAmount !== null
-                  ? Math.min(Math.max(suggestedAmount, 0.01), maxAmount ?? suggestedAmount)
-                  : current.amount,
-              estimatedRange,
-              estimateMessage:
-                estimate.message ??
-                "Suggested portion loaded. Please confirm or edit the amount before saving.",
-              isEstimating: false,
-            }
-          : current,
-      );
-    } catch (error) {
-      setPortionConsumeState((current) =>
-        current
-          ? {
-              ...current,
-              estimateMessage:
-                error instanceof Error
-                  ? `${error.message}. You can still enter the portion manually.`
-                  : "Could not estimate the portion. You can still enter it manually.",
-              estimatedRange: null,
-              isEstimating: false,
-            }
-          : current,
-      );
-    }
-  }, [api, householdId, message, portionConsumeState]);
-
-
   // Issue #95 — open portion input modal; calorie-unknown check runs after amount is chosen
   const consumeInventoryItem = useCallback(
     (item: PantryItem) => {
@@ -787,10 +708,6 @@ export default function StatsPage() {
       item,
       amount: defaultAmount,
       amountUnit: defaultUnit,
-      mealPhoto: null,
-      estimateMessage: null,
-      estimatedRange: null,
-      isEstimating: false,
     });
     },
     [message],
@@ -874,7 +791,7 @@ export default function StatsPage() {
           const totalCalories = computeRemainingKcal(record);
           if (totalCalories !== null) {
             return (
-              <Space direction="vertical" size={0}>
+              <Space orientation="vertical" size={0}>
                 <Text strong>{formatKcal(totalCalories)}</Text>
                 <Text type="secondary" style={{ fontSize: 12 }}>inventory total</Text>
               </Space>
@@ -1195,7 +1112,7 @@ export default function StatsPage() {
                             )
                           }
                         >
-                          Add from Open Food Facts
+                          Add from {FOOD_CATALOG_LABEL}
                         </Button>
                         <Button
                           size="small"
@@ -1207,26 +1124,7 @@ export default function StatsPage() {
                         >
                           Scan package barcode
                         </Button>
-                        <Button
-                          size="small"
-                          onClick={() =>
-                            router.push(
-                              `/pantry/add/recognize?householdId=${householdId}&householdName=${encodeURIComponent(householdName)}`,
-                            )
-                          }
-                        >
-                          Recognize food from photo
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() =>
-                            router.push(
-                              `/pantry/add/receipt?householdId=${householdId}&householdName=${encodeURIComponent(householdName)}`,
-                            )
-                          }
-                        >
-                          Upload receipt
-                        </Button>
+
                         <Button
                           size="small"
                           onClick={() =>
@@ -1256,6 +1154,13 @@ export default function StatsPage() {
                       />
                     )}
                   </Card>
+
+                  <AIConsumptionSection
+                    key={householdId}
+                    householdId={householdId}
+                    pantryItems={pantry?.items ?? []}
+                    onConsumptionRecorded={loadDashboard}
+                  />
 
                   <Card className={`${statsStyles.panelCard} ${statsStyles.activityCard}`} title="Recent activity" variant="borderless">
                     {activity.length === 0 ? (
@@ -1564,49 +1469,7 @@ export default function StatsPage() {
                 />
               </div>
             )}
-            <div>
-              <Text style={{ display: "block", marginBottom: 4 }}>
-                Optional meal photo for portion suggestion
-              </Text>
-              <input
-                aria-label="Meal photo"
-                type="file"
-                accept="image/jpeg,image/png"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
-                  setPortionConsumeState((current) =>
-                    current
-                      ? {
-                          ...current,
-                          mealPhoto: file,
-                          estimateMessage: null,
-                          estimatedRange: null,
-                        }
-                      : current,
-                  );
-                }}
-              />
-            </div>
-
-            <Button
-              onClick={() => void estimatePortionFromPhoto()}
-              loading={portionConsumeState.isEstimating}
-              disabled={!portionConsumeState.mealPhoto || portionConsumeState.isEstimating}
-            >
-              Estimate portion from photo
-            </Button>
-
-            {portionConsumeState.estimatedRange ? (
-              <Text strong>
-                Suggested range: {portionConsumeState.estimatedRange}
-              </Text>
-            ) : null}
-
-            {portionConsumeState.estimateMessage ? (
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {portionConsumeState.estimateMessage}
-              </Text>
-            ) : null}
+            
           </Space>
         ) : null}
       </Modal>

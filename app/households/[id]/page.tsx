@@ -37,13 +37,14 @@ import {
   SearchOutlined,
   CameraOutlined,
   EditOutlined,
-  FileImageOutlined,
   WarningOutlined,
   FireOutlined,
 } from "@ant-design/icons";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 const { Title, Paragraph, Text } = Typography;
+
+import { FOOD_CATALOG_LABEL } from "../../config/foodCatalog";
 
 type HouseholdLookup = {
   householdId: number;
@@ -385,8 +386,8 @@ export default function HouseholdPantryPage() {
                   }}
                 >
                   Pantry overview for {username?.trim() || "the current user"}.
-                  Add products through Open Food Facts or use the barcode scan
-                  flow for faster household inventory updates.
+                  Search the {FOOD_CATALOG_LABEL}, scan product barcodes,
+                    and manage your household inventory.
                 </Paragraph>
               </div>
 
@@ -552,9 +553,8 @@ export default function HouseholdPantryPage() {
                     Add products to pantry
                   </Title>
                   <Paragraph style={{ margin: 0, color: "#5f6e60", maxWidth: 980 }}>
-                    Choose how you want to add the next item. Use Open Food Facts
-                    for direct barcode or name lookup, scan a package image, or
-                    upload a meal photo or receipt to extract items.
+                    Add products from the {FOOD_CATALOG_LABEL}, scan a package barcode,
+                    or enter a product manually.
                   </Paragraph>
 
                   <Space wrap size="small" style={{ paddingTop: 8 }}>
@@ -585,34 +585,6 @@ export default function HouseholdPantryPage() {
                       }
                     >
                       Scan package barcode
-                    </Button>
-
-                    <Button
-                      size="middle"
-                      icon={<CameraOutlined />}
-                      onClick={() =>
-                        router.push(
-                          `/pantry/add/recognize?householdId=${householdId}&householdName=${encodeURIComponent(
-                            householdName,
-                          )}`,
-                        )
-                      }
-                    >
-                      Recognize food from photo
-                    </Button>
-
-                    <Button
-                      size="middle"
-                      icon={<FileImageOutlined />}
-                      onClick={() =>
-                        router.push(
-                          `/pantry/add/receipt?householdId=${householdId}&householdName=${encodeURIComponent(
-                            householdName,
-                          )}`,
-                        )
-                      }
-                    >
-                      Upload receipt
                     </Button>
 
                     {/* Issue #114 — manual add entry alongside scan/receipt/OFF flows */}

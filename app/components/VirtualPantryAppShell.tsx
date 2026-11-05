@@ -75,7 +75,10 @@ export function VirtualPantryAppShell({ activeNav, children }: VirtualPantryAppS
     router.push("/login");
   };
 
-  const userLabel = username?.trim() ? username.trim() : "@unknown";
+  const rawUsername = username?.trim() ? username.trim() : "@unknown";
+  const userLabel = rawUsername.startsWith("Guest_") 
+    ? `Guest (${rawUsername.slice(-4)})` 
+    : rawUsername;
   const userInitial = userLabel.charAt(0).toUpperCase();
 
   const navBtn = (nav: VirtualPantryNav) =>

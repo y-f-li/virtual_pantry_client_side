@@ -1,6 +1,8 @@
+// register/page.tsx
+
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import useSessionStorage from "@/hooks/useSessionStorage";
@@ -10,6 +12,8 @@ import { getRegisterErrorMessage } from "@/utils/authError";
 import { User } from "@/types/user";
 import { App, Button, Checkbox, Form, Input } from "antd";
 import styles from "@/styles/auth.module.css";
+import ConnectingOverlay from "../components/ConnectingOverlay";
+import { useStartGuestSession } from "@/utils/startGuestSession";
 
 interface RegisterFormValues {
   username: string;
@@ -21,8 +25,10 @@ interface RegisterFormValues {
 
 const Register: React.FC = () => {
   const router = useRouter();
+  const [ connecting, setConnecting ] = useState(false);
   const { message } = App.useApp();
   const apiService = useApi();
+  const startGuestSession = useStartGuestSession();
 
   useEffect(() => {
     try {
@@ -37,8 +43,10 @@ const Register: React.FC = () => {
   const { set: setUsername } = useSessionStorage<string>("username", "");
   const { set: setUserId } = useSessionStorage<string>("userId", "");
   const { set: setHouseholds } = useSessionStorage<HouseholdWithRole[]>("households", []);
+  const { set: setSelectedHouseholdId } = useSessionStorage<number | null>("selectedHouseholdId", null);
 
   const handleRegister = async (values: RegisterFormValues): Promise<void> => {
+    setConnecting(true);
     try {
       const response = await apiService.post<User>("/users/register", {
         username: values.username.trim(),
@@ -56,12 +64,20 @@ const Register: React.FC = () => {
       try {
         const households = await apiService.get<HouseholdWithRole[]>("/households");
         setHouseholds(households);
+        if (households.length === 1) {
+          const id = households[0].householdId;
+
+          setSelectedHouseholdId(id);
+          router.push(`/households/${id}/stats`);
+          return;
+        }
       } catch {
         setHouseholds([]);
       }
 
       router.push("/households");
     } catch (error) {
+      setConnecting(false);
       message.error(getRegisterErrorMessage(error));
     }
   };
@@ -69,11 +85,29 @@ const Register: React.FC = () => {
   return (
     <AuthLayout
       title="Create Account"
-      subtitle="Join our community of mindful curators."
+      subtitle="Sign up to continue."
       switchPrompt="Already have an account?"
       switchActionLabel="Sign in"
       onSwitchAction={() => router.push("/login")}
+      topContent={
+        <div className={styles.authCard}>
+          <h2 className={styles.authTitle}>
+            Try a Demo?
+          </h2>
+          <p className={styles.authSubtitle}>
+            Explore without signing up
+          </p>
+          <Button
+            type="primary"
+            className={styles.submitButton}
+            onClick={startGuestSession}
+          >
+            Try Demo
+          </Button>
+        </div>
+      }
     >
+      {connecting && <ConnectingOverlay />}
       <Form<RegisterFormValues>
         form={form}
         name="register"
@@ -128,24 +162,7 @@ const Register: React.FC = () => {
         >
           <Input.Password placeholder="••••••••" />
         </Form.Item>
-        <Form.Item
-          name="acceptedTerms"
-          valuePropName="checked"
-          rules={[
-            {
-              validator: (_, value) =>
-                value
-                  ? Promise.resolve()
-                  : Promise.reject(new Error("Please agree to the terms to continue.")),
-            },
-          ]}
-        >
-          <Checkbox className={styles.inlineAgreement}>
-            <span className={styles.requiredSign}>*</span> I agree to the{" "}
-            <a href="#terms">Terms of Service</a> and{" "}
-            <a href="#privacy">Privacy Policy</a>.
-          </Checkbox>
-        </Form.Item>
+
         <Form.Item>
           <Button type="primary" htmlType="submit" className={styles.submitButton}>
             Create Account

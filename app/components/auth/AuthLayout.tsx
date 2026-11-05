@@ -11,6 +11,8 @@ interface AuthLayoutProps {
   switchActionLabel: string;
   onSwitchAction: () => void;
   children: ReactNode;
+  topContent?: ReactNode;
+  bottomContent?: ReactNode;
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({
@@ -20,40 +22,24 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   switchActionLabel,
   onSwitchAction,
   children,
+  topContent,
+  bottomContent,
 }) => {
   return (
     <>
       <div className={styles.authPage}>
         <section className={styles.leftPanel}>
-          <p className={styles.brand}>Virtual Pantry</p>
+          <p className={styles.brand}>The Better Cronometer</p>
           <h1 className={styles.heroTitle}>
-            Manage Your <span className={styles.heroTitleAccent}>Pantry</span>{" "}
-            Like Never Before
+            Simplify Your <span className={styles.heroTitleAccent}>Nutrition Tracking</span>{" "}
+            Workflow
           </h1>
-          <div className={styles.featureList}>
-            <article className={styles.featureCard}>
-              <p className={styles.featureTitle}>Household Collaboration</p>
-              <p className={styles.featureText}>
-                Share access with family members and sync your pantry in real time.
-              </p>
-            </article>
-            <article className={styles.featureCard}>
-              <p className={styles.featureTitle}>Smart Notifications</p>
-              <p className={styles.featureText}>
-                Get gentle reminders before ingredients expire to reduce food waste.
-              </p>
-            </article>
-            <article className={styles.featureCard}>
-              <p className={styles.featureTitle}>Usage Analytics</p>
-              <p className={styles.featureText}>
-                Track consumption patterns and optimize your grocery budget.
-              </p>
-            </article>
-          </div>
-          <p className={styles.leftFooter}>THE DIGITAL CONSERVATORY © 2026</p>
         </section>
 
         <section className={styles.rightPanel}>
+
+          {topContent}
+          
           <div className={styles.authCard}>
             <h2 className={styles.authTitle}>{title}</h2>
             <p className={styles.authSubtitle}>{subtitle}</p>
@@ -66,19 +52,16 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
                 type="link"
                 className={styles.switchLink}
                 onClick={onSwitchAction}
-              >
+                >
                 {switchActionLabel}
               </Button>
             </p>
+
+            {bottomContent}
+            
           </div>
         </section>
       </div>
-
-      <footer className={styles.authFooter}>
-        <a href="#privacy">PRIVACY POLICY</a>
-        <a href="#terms">TERMS OF SERVICE</a>
-        <a href="#support">CONTACT SUPPORT</a>
-      </footer>
     </>
   );
 };
