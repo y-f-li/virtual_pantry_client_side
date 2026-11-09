@@ -758,19 +758,21 @@ export default function StatsPage() {
           </Text>
         ),
       },
-      {
-        title: "Category",
-        key: "category",
-        width: 120,
-        render: (_: unknown, record: PantryItem) => {
-          const { label, color } = inferCategory(record.name);
-          return (
-            <Tag className={statsStyles.categoryTag} color={color}>
-              {label}
-            </Tag>
-          );
-        },
-      },
+      // category
+      // {
+      //   title: "Category",
+      //   key: "category",
+      //   width: 120,
+      //   render: (_: unknown, record: PantryItem) => {
+      //     const { label, color } = inferCategory(record.name);
+      //     return (
+      //       <Tag className={statsStyles.categoryTag} color={color}>
+      //         {label}
+      //       </Tag>
+      //     );
+      //   },
+      // },
+      // amount 
       {
         title: "Amount",
         key: "amount",
@@ -781,6 +783,7 @@ export default function StatsPage() {
           </span>
         ),
       },
+      // remaining kcal 
       {
         title: "Remaining kcal",
         key: "cals",
@@ -813,6 +816,7 @@ export default function StatsPage() {
           );
         },
       },
+      // expires
       {
         title: "Expires",
         key: "expiry",
@@ -827,17 +831,18 @@ export default function StatsPage() {
           return <Tag>{exp.format("MMM D")}</Tag>;
         },
       },
-      {
-        title: "Status",
-        key: "status",
-        width: 120,
-        render: (_: unknown, record: PantryItem) =>
-          record.amount <= 2 ? (
-            <Tag color="orange">Low stock</Tag>
-          ) : (
-            <Tag color="success">In stock</Tag>
-          ),
-      },
+      // status 
+      // {
+      //   title: "Status",
+      //   key: "status",
+      //   width: 120,
+      //   render: (_: unknown, record: PantryItem) =>
+      //     record.amount <= 2 ? (
+      //       <Tag color="orange">Low stock</Tag>
+      //     ) : (
+      //       <Tag color="success">In stock</Tag>
+      //     ),
+      // },
       {
         title: "Action",
         key: "action",
@@ -1089,22 +1094,6 @@ export default function StatsPage() {
                     ) : null}
                   </Space>
                 </Card>
-              </Col>
-            </Row> */}
-
-            {/* obsolete nutrition card */}
-            {/* <Row gutter={[20, 20]} className={statsStyles.nutritionRow}>
-              <Col className={statsStyles.nutritionSection}>
-                <span>
-                  Nutrition
-                </span>
-                <Button 
-                  className={statsStyles.nutritionButton}
-                  type="primary"
-                  onClick={() => router.push(`/users/${userId}/details/nutrition-reference`)}
-                >
-                  Nutrition Reference
-                </Button>
               </Col>
             </Row> */}
 
