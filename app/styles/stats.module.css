@@ -17,6 +17,47 @@
   max-width: 640px;
 }
 
+/* nutrition card */
+.nutritionCard {
+  width: 100%;
+  border: 1px solid #dce8d4 !important;
+  border-radius: 14px !important;
+  background: #f0f7ed !important;
+  box-shadow: 0 4px 14px rgba(24, 60, 28, 0.06);
+}
+
+.nutritionContent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.nutritionCopy {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.nutritionTitle {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #14532d;
+}
+
+.nutritionDescription {
+  margin: 0;
+  max-width: 650px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #5d6a5d;
+}
+/* nutrition card */
+
+
 .metricGrid {
   margin-bottom: 28px;
 }

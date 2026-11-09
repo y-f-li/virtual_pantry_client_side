@@ -877,21 +877,21 @@ export default function StatsPage() {
   return (
     <VirtualPantryAppShell activeNav="pantry">
       <div className={statsStyles.pageHeader}>
-        <Button
+        {/* <Button
           size="middle"
           icon={<ArrowLeftOutlined />}
           onClick={() => router.push("/households")}
           style={{ marginBottom: 18, borderRadius: 12, fontWeight: 600 }}
         >
           Manage
-        </Button>
+        </Button> */}
         <Title level={2} className={statsStyles.pageTitle}>
           {householdName}
         </Title>
-        <Paragraph className={statsStyles.pageSubtitle}>
+        {/* <Paragraph className={statsStyles.pageSubtitle}>
           Energy reservoir, consumption flow, and daily calorie target — with current inventory and a record of
           what you use from the pantry.
-        </Paragraph>
+        </Paragraph> */}
       </div>
 
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
@@ -901,7 +901,8 @@ export default function StatsPage() {
           </Card>
         ) : (
           <>
-            <Row gutter={[20, 20]} className={statsStyles.metricGrid}>
+            
+            {/* <Row gutter={[20, 20]} className={statsStyles.metricGrid}>
               <Col xs={24} md={8}>
                 <Card
                   className={statsStyles.metricCard}
@@ -979,10 +980,8 @@ export default function StatsPage() {
                   }
                   variant="borderless"
                 >
-                  {/* Issue #124 — two clearly labelled progress rows so users know what each one measures */}
                   <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
 
-                    {/* Row 1: household total today vs household daily target (set by admin) */}
                     <div>
                       <Text style={{ color: MUTED, fontSize: 12 }}>
                         🏠 Household total today
@@ -1015,7 +1014,6 @@ export default function StatsPage() {
                       ) : (
                         <Text style={{ color: MUTED, fontSize: 12 }}>
                           No household target set
-                          {/* Issue #124 — only owners can set the household target */}
                           {isOwner && (
                             <> —{" "}
                               <Button type="link" onClick={openBudgetModal} style={{ color: FOREST, padding: 0, height: "auto", fontSize: 12 }}>
@@ -1029,7 +1027,6 @@ export default function StatsPage() {
 
                     <Divider style={{ margin: "4px 0" }} />
 
-                    {/* Row 2: my personal intake today vs my personal health goal */}
                     <div>
                       <Text style={{ color: MUTED, fontSize: 12 }}>
                         👤 Your intake today
@@ -1093,10 +1090,57 @@ export default function StatsPage() {
                   </Space>
                 </Card>
               </Col>
-            </Row>
+            </Row> */}
 
+            {/* obsolete nutrition card */}
+            {/* <Row gutter={[20, 20]} className={statsStyles.nutritionRow}>
+              <Col className={statsStyles.nutritionSection}>
+                <span>
+                  Nutrition
+                </span>
+                <Button 
+                  className={statsStyles.nutritionButton}
+                  type="primary"
+                  onClick={() => router.push(`/users/${userId}/details/nutrition-reference`)}
+                >
+                  Nutrition Reference
+                </Button>
+              </Col>
+            </Row> */}
+
+            {/* nutrition card */}
+            <Card
+              className={statsStyles.nutritionCard}
+            >
+              <div className={statsStyles.nutritionContent}>
+                <div className={statsStyles.nutritionCopy}>
+                  <h3 className={statsStyles.nutritionTitle}>
+                    Your Nutrition
+                  </h3>
+
+                  <p className={statsStyles.nutritionDescription}>
+                  </p>
+                </div>
+
+                <Button
+                  type="primary"
+                  size="large"
+                  disabled={!userId}
+                  onClick={() =>
+                    router.push(
+                      `/users/${userId}/details/nutrition-reference`
+                    )
+                  }
+                >
+                  View Nutrition Reference
+                </Button>
+              </div>
+            </Card>
+
+            {/* inventory + ai logging + recent activity */}
             <Row gutter={[20, 20]} className={statsStyles.lowerSection}>
               <Col xs={24}>
+                {/* Inventory */}
                 <Space orientation="vertical" size="large" style={{ width: "100%" }}>
                   <Card
                     className={statsStyles.panelCard}
@@ -1269,8 +1313,7 @@ export default function StatsPage() {
               )}
             </Card>
 
-            {/* Issue #124 — Chart 3: household daily total, last 7 days with target reference line */}
-            <Card
+            {/* <Card
               title={<span style={{ fontSize: 16, fontWeight: 700, color: "#1f2d1f" }}>Household daily calorie consumption</span>}
               style={{ borderRadius: 16, borderColor: "#d9e2cf" }}
             >
@@ -1321,10 +1364,10 @@ export default function StatsPage() {
                   description={<Typography.Text type="secondary" style={{ fontSize: 13 }}>No consumption recorded in the last 7 days</Typography.Text>}
                 />
               )}
-            </Card>
+            </Card> */}
 
             {/* Issue #124 — Chart 2: member average daily intake, placed last; horizontal scroll for large households */}
-            {stats?.memberBreakdown && stats.memberBreakdown.length > 0 && (
+            {/* {stats?.memberBreakdown && stats.memberBreakdown.length > 0 && (
               <Card
                 title={<span style={{ fontSize: 16, fontWeight: 700, color: "#1f2d1f" }}>Average daily intake per member</span>}
                 style={{ borderRadius: 16, borderColor: "#d9e2cf" }}
@@ -1351,7 +1394,7 @@ export default function StatsPage() {
                 </div>
                 <Typography.Text style={{ fontSize: 11, color: MUTED }}>kcal / day average</Typography.Text>
               </Card>
-            )}
+            )} */}
           </>
         )}
       </Space>

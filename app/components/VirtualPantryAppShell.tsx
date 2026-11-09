@@ -107,58 +107,74 @@ export function VirtualPantryAppShell({ activeNav, children }: VirtualPantryAppS
       }}
     >
       <div className={styles.layout}>
-        <aside className={styles.sidebar}>
+
+        <header className={styles.appHeader}>
+
           <div>
             <div className={styles.brand}>Virtual Pantry</div>
-            <div className={styles.brandTagline}>The Organic Atelier</div>
+            {/* <div className={styles.brandTagline}> [Tagline] </div> */}
           </div>
+
           <nav className={styles.menu}>
-            <button
+            {/* Dashboard Button */}
+            {/* <button
               type="button"
               className={navBtn("dashboard")}
               onClick={() => router.push("/users")}
             >
               <DashboardOutlined className={styles.menuIcon} />
               <span className={styles.menuText}>Dashboard</span>
-            </button>
-            <button type="button" className={navBtn("households")} onClick={() => router.push("/households")}>
+            </button> */}
+            {/* Manage Button */}
+            {/* <button type="button" className={navBtn("households")} onClick={() => router.push("/households")}>
               <HomeOutlined className={styles.menuIcon} />
               <span className={styles.menuText}>Manage</span>
-            </button>
+            </button> */}
+            {/* Pantry Button */}
             <button type="button" className={navBtn("pantry")} onClick={handleSidebarPantry}>
               <InboxOutlined className={styles.menuIcon} />
               <span className={styles.menuText}>Pantry</span>
             </button>
-            <button
+            {/* Recipes Button */}
+            {/* <button
               type="button"
               className={navBtn("recipes")}
               onClick={handleSidebarRecipes}
             >
               <ReadOutlined className={styles.menuIcon} />
               <span className={styles.menuText}>Recipes</span>
-            </button>
+            </button> */}
           </nav>
 
-          <div className={styles.sidebarFooter}>
+          <div className={styles.headeraction}>
+            
+            <div className={styles.userDisplay}>
+
+              <span className={styles.userName}>{userLabel}</span>
+
+              <Avatar
+                size={64}
+                className={styles.userAvatar}
+                style={{ cursor: userId ? "pointer" : "default" }}
+                onClick={() => { if (userId) router.push(`/users/${userId}/health-goal`); }}
+                >
+                {userInitial}
+              </Avatar>
+
+            </div>
+
             <button type="button" className={styles.logoutButton} onClick={handleLogout}>
               <LogoutOutlined className={styles.menuIcon} />
               <span className={styles.menuText}>Logout</span>
             </button>
+
+
           </div>
-        </aside>
+
+        </header>
 
         <main className={styles.main}>
-          <div className={styles.topUserBar}>
-            <span className={styles.userName}>{userLabel}</span>
-            <Avatar
-              size={64}
-              className={styles.userAvatar}
-              style={{ cursor: userId ? "pointer" : "default" }}
-              onClick={() => { if (userId) router.push(`/users/${userId}/health-goal`); }}
-            >
-              {userInitial}
-            </Avatar>
-          </div>
+
           {children}
         </main>
       </div>
