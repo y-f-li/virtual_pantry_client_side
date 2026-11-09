@@ -16,7 +16,7 @@ export default function ConnectingOverlay() {
         }}
     >
         <Spin size="large" />
-        <p>Logging you in...</p>
+        <p>Logging you in...This might take a while</p>
     </div>
   );
 }
